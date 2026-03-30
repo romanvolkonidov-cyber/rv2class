@@ -20,6 +20,28 @@ interface StudentData {
   currency?: string;
 }
 
+const createFallbackProfile = (studentId: string): GameProfile => ({
+  studentId,
+  xp: 0,
+  shopCoins: 0,
+  totalHomeworksCompleted: 0,
+  perfectScores: 0,
+  highScores: 0,
+  bestTimerBonus: 0,
+  earlyCompletions: 0,
+  treeHealth: 50,
+  unlockedBadges: [],
+  purchasedRewards: [],
+  equippedTheme: null,
+  equippedFrame: null,
+  equippedTitle: null,
+  petId: null,
+  petAccessories: [],
+  currentStreak: 0,
+  highestStreak: 0,
+  lastHomeworkWeek: null,
+});
+
 export default function StudentWelcome({ student }: { student: StudentData }) {
   const router = useRouter();
   const [isJoining, setIsJoining] = useState(false);
@@ -31,12 +53,22 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
   useEffect(() => {
     const loadData = async () => {
-      const [count, profile] = await Promise.all([
+      const [countResult, profileResult] = await Promise.allSettled([
         countUncompletedHomework(student.id),
         getGameProfile(student.id),
       ]);
-      setUncompletedCount(count);
-      setGameProfile(profile);
+
+      if (countResult.status === "fulfilled") {
+        setUncompletedCount(countResult.value);
+      } else {
+        setUncompletedCount(0);
+      }
+
+      if (profileResult.status === "fulfilled") {
+        setGameProfile(profileResult.value);
+      } else {
+        setGameProfile(createFallbackProfile(student.id));
+      }
     };
     loadData();
   }, [student.id]);

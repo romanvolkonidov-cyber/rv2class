@@ -303,16 +303,21 @@ const DEFAULT_PROFILE: Omit<GameProfile, "studentId"> = {
 // ─── Firebase Operations ────────────────────────────────────────────
 
 export async function getGameProfile(studentId: string): Promise<GameProfile> {
-  await ensureAuth();
-  const ref = doc(db, "studentGameProfiles", studentId);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    return { studentId, ...DEFAULT_PROFILE, ...snap.data() } as GameProfile;
+  const fallbackProfile: GameProfile = { studentId, ...DEFAULT_PROFILE };
+  if (!studentId) return fallbackProfile;
+  try {
+    await ensureAuth();
+    const ref = doc(db, "studentGameProfiles", studentId);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      return { studentId, ...DEFAULT_PROFILE, ...snap.data() } as GameProfile;
+    }
+    await setDoc(ref, { ...DEFAULT_PROFILE, lastUpdated: serverTimestamp() });
+    return fallbackProfile;
+  } catch (error) {
+    console.error("Error getting game profile:", error);
+    return fallbackProfile;
   }
-  // Create default profile
-  const profile: GameProfile = { studentId, ...DEFAULT_PROFILE };
-  await setDoc(ref, { ...DEFAULT_PROFILE, lastUpdated: serverTimestamp() });
-  return profile;
 }
 
 export async function updateGameProfile(studentId: string, updates: Partial<GameProfile>): Promise<void> {
@@ -597,4 +602,3 @@ export async function saveQuestionProgress(studentId: string, homeworkId: string
     console.error("Error saving question progress:", err);
   }
 }
-
