@@ -1,0 +1,50 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Electron
+electron/dist/
+electron/node_modules/
+
+# DeepFilterNet Audio Agent
+livekit-audio-agent/venv-deepfilter/
+livekit-audio-agent/agent.log
+livekit-audio-agent/**/*.log
+livekit-audio-agent/__pycache__/
+livekit-audio-agent/**/__pycache__/
+*.backup
+dev.log
+*-firebase-adminsdk-*.json

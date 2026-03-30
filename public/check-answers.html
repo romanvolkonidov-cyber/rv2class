@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework Answers Database Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .report {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f9f9f9;
+        }
+        .report.with-answers {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+        .report.without-answers {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+        .report h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .report-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .detail-item {
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .detail-value {
+            font-weight: bold;
+            color: #333;
+        }
+        .answers-sample {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .answer-item {
+            padding: 10px;
+            border-left: 3px solid #667eea;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .summary h2 {
+            margin-top: 0;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Homework Answers Database Check</h1>
+        <p>This tool queries the Firebase database to verify if homework answers are being saved correctly.</p>
+        
+        <button id="checkBtn" onclick="checkDatabase()">Check Database</button>
+        
+        <div id="status" class="status loading" style="display: none;">
+            Querying database...
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function checkDatabase() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            const checkBtn = document.getElementById('checkBtn');
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Querying database...';
+            checkBtn.disabled = true;
+            resultsDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/debug/check-homework-answers');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Error: ' + data.message;
+                    checkBtn.disabled = false;
+                    return;
+                }
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `✅ ${data.message} - Found ${data.totalReports} reports`;
+                
+                // Display summary
+                const summaryHTML = `
+                    <div class="summary">
+                        <h2>📊 Summary</h2>
+                        <div class="summary-stats">
+                            <div class="stat">
+                                <div class="stat-value">${data.totalReports}</div>
+                                <div class="stat-label">Total Reports</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${data.reportsWithAnswers}</div>
+                                <div class="stat-label">With Answers ✅</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${data.reportsWithoutAnswers}</div>
+                                <div class="stat-label">Without Answers ⚠️</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${data.summary.percentageWithAnswers}</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 20px; font-size: 14px;">
+                            ${data.summary.note}
+                        </p>
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = summaryHTML;
+                
+                // Display individual reports
+                data.reports.forEach((report, index) => {
+                    const hasAnswers = report.hasAnswers && report.isArray && report.answersCount > 0;
+                    const reportHTML = `
+                        <div class="report ${hasAnswers ? 'with-answers' : 'without-answers'}">
+                            <h3>📋 Report #${index + 1} - ${hasAnswers ? '✅ Has Answers' : '❌ No Answers'}</h3>
+                            
+                            <div class="report-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Report ID</div>
+                                    <div class="detail-value">${report.id}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Student ID</div>
+                                    <div class="detail-value">${report.studentId}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Homework ID</div>
+                                    <div class="detail-value">${report.homeworkId}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Score</div>
+                                    <div class="detail-value">${report.score}%</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Correct Answers</div>
+                                    <div class="detail-value">${report.correctAnswers}/${report.totalQuestions}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Submitted Answers Count</div>
+                                    <div class="detail-value">${report.answersCount}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Completed Via</div>
+                                    <div class="detail-value">${report.completedVia}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Completed At</div>
+                                    <div class="detail-value">${report.completedAt ? new Date(report.completedAt).toLocaleString() : 'N/A'}</div>
+                                </div>
+                            </div>
+                            
+                            ${report.sampleAnswers && report.sampleAnswers.length > 0 ? `
+                                <div class="answers-sample">
+                                    <h4>📝 Sample Answers (first 3):</h4>
+                                    ${report.sampleAnswers.map((ans, idx) => `
+                                        <div class="answer-item">
+                                            <strong>Answer ${idx + 1}:</strong><br>
+                                            Question ID: ${ans.questionId}<br>
+                                            Answer: "${ans.answer}"<br>
+                                            Type: ${ans.answerType}, Length: ${ans.answerLength} chars
+                                        </div>
+                                    `).join('')}
+                                    ${report.answersCount > 3 ? `<p>... and ${report.answersCount - 3} more answers</p>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${!hasAnswers ? `
+                                <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                                    <strong>⚠️ This report has no answers!</strong><br>
+                                    This could be an old report from before the fix was applied.
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    resultsDiv.innerHTML += reportHTML;
+                });
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error: ' + error.message;
+                console.error('Error:', error);
+            } finally {
+                checkBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

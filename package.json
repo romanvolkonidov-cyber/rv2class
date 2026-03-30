@@ -1,0 +1,48 @@
+{
+  "name": "rv2class",
+  "version": "1.0.0",
+  "description": "Professional English tutoring platform with video, screen sharing, and whiteboard",
+  "main": "firebase_config.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "cleanup:empty-homework": "tsx scripts/cleanup-empty-homework.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@excalidraw/excalidraw": "^0.18.0",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^24.6.2",
+    "@types/react": "^19.2.0",
+    "@vitalets/google-translate-api": "^9.2.1",
+    "canvas-confetti": "^1.9.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "firebase": "^12.3.0",
+    "lucide-react": "^0.544.0",
+    "next": "15.5.7",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^6.0.1",
+    "tldraw": "^4.1.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/react-dom": "^19.2.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6"
+  }
+}

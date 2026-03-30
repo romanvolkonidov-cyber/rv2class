@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function - limit document size to prevent cost attacks
+    function isValidSize() {
+      return request.resource.size() < 5000000; // 5MB limit
+    }
+    
+    // Students collection - public read/write (app needs this for login)
+    match /students/{studentId} {
+      allow read: if true;
+      allow create: if isValidSize();
+      allow update: if isValidSize();
+      allow delete: if false; // Block deletes to prevent data loss
+    }
+    
+    // Teacher-student connections - public read/write
+    match /teacherStudents/{docId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Users collection - public read/write
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Library/courses - public read/write (teachers need this)
+    match /library/{courseId} {
+      allow read: if true;
+      allow write: if isValidSize();
+      
+      match /{allPaths=**} {
+        allow read: if true;
+        allow write: if isValidSize();
+      }
+    }
+    
+    // Active rooms - public read/write (teachers need to start lessons)
+    match /activeRooms/{roomId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Join requests - public read/write (students request to join a lesson)
+    match /joinRequests/{requestId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Feedbacks - public read/write (lesson feedback from students)
+    match /feedbacks/{feedbackId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Chat messages - public read/write (in-lesson chat)
+    match /chatMessages/{messageId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Student profiles - public read/write (profile data)
+    match /studentProfiles/{profileId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Settings - public read/write (exchange rates, income, debt)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Visibility flags - public read/write
+    match /visibility/{visibilityId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Transactions - public read/write
+    match /transactions/{txId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Student progress bars - public read/write
+    match /studentProgress/{progressId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Table data (homework tracking) - public read/write
+    match /tableData/{dataId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Telegram collections - public read/write
+    match /telegramAssignments/{assignmentId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramHomeworkReports/{reportId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramQuestions/{questionId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramTopics/{topicId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramTests/{testId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramTestQuestions/{questionId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramChapters/{chapterId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramCourses/{courseId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    match /telegramConnections/{connectionId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Weekly schedules - public read/write
+    match /weeklySchedule/{scheduleId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Connections - public read/write
+    match /connections/{connectionId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Error logs - write only, no reads
+    match /errors/{errorId} {
+      allow read: if false;
+      allow write: if isValidSize();
+    }
+    
+    // Notification logs - public read/write
+    match /notificationLogs/{logId} {
+      allow read: if true;
+      allow write: if isValidSize();
+    }
+    
+    // Block unlimited writes to unknown collections
+    match /{document=**} {
+      allow read: if true;
+      allow write: if false; // Block writes to collections not listed above
+    }
+  }
+}

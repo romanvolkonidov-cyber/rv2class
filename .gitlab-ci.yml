@@ -1,0 +1,14 @@
+# GitLab CI/CD completely disabled
+# No pipelines will run
+
+default:
+  interruptible: true
+
+workflow:
+  rules:
+    - when: never
+
+# Empty pipeline - nothing to run
+variables:
+  GIT_STRATEGY: none
+
