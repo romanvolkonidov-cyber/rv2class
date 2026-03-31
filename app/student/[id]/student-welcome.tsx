@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { countUncompletedHomework } from "@/lib/firebase";
-import { getGameProfile, getLevelForXP, getNextBadgeHint, getNextLevel, getNextShopUnlock, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeColors, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
@@ -139,9 +139,12 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
   const level = gameProfile ? getLevelForXP(gameProfile.xp) : null;
   const progress = gameProfile ? getXPProgress(gameProfile.xp) : null;
+  const masterTier = gameProfile ? getMasterTierInfo(gameProfile.xp) : null;
   const nextLevel = level ? getNextLevel(level.level) : null;
   const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
   const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
+  const themeColors = gameProfile ? getThemeColors(gameProfile.equippedTheme) : null;
+  const activeGradient = themeColors?.gradient || colors.gradient;
   const isFirstTimeStudent = gameProfile
     ? gameProfile.totalHomeworksCompleted === 0 && gameProfile.purchasedRewards.length === 0 && gameProfile.unlockedBadges.length === 0
     : false;
@@ -158,7 +161,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
       <div className="max-w-2xl w-full space-y-4 relative z-10">
         {/* Welcome Card */}
         <div className="glass-panel rounded-3xl overflow-hidden">
-          <div className={`bg-gradient-to-r ${colors.gradient} p-6 sm:p-8`}>
+          <div className={`bg-gradient-to-r ${activeGradient} p-6 sm:p-8`}>
             <div className="flex items-center gap-4">
               <div className="glass-surface-dark p-3 rounded-2xl">
                 <UserCircle className="h-10 w-10 text-white" />
@@ -254,6 +257,11 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 <div className="space-y-1 text-sm text-gray-700">
                   {nextLevel ? (
                     <div>До следующего уровня {nextLevel.emoji} осталось: <span className="font-bold">{Math.max(0, nextLevel.xpRequired - gameProfile.xp)} XP</span></div>
+                  ) : masterTier?.atMaxLevel ? (
+                    <div>
+                      Мастер-тир {masterTier.tier}: до следующего тира
+                      <span className="font-bold"> {masterTier.xpPerTier - masterTier.xpIntoTier} XP</span>
+                    </div>
                   ) : (
                     <div>Максимальный уровень уже достигнут 🏆</div>
                   )}
@@ -326,7 +334,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
             {/* Join Lesson Button */}
             <div>
-              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${colors.gradient} shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20`}>
+              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${activeGradient} shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20`}>
                 <button
                   onClick={handleJoinClass}
                   disabled={isJoining}

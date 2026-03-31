@@ -11,17 +11,44 @@ export interface LevelInfo {
 }
 
 export const LEVELS: LevelInfo[] = [
-  { level: 1,  title: "Sprout",        emoji: "🌱", xpRequired: 0 },
-  { level: 2,  title: "Seedling",      emoji: "🌿", xpRequired: 100 },
-  { level: 3,  title: "Blossom",       emoji: "🌾", xpRequired: 300 },
-  { level: 4,  title: "Sapling",       emoji: "🌳", xpRequired: 600 },
-  { level: 5,  title: "Oak",           emoji: "🌲", xpRequired: 1000 },
-  { level: 6,  title: "Summit",        emoji: "🏔️", xpRequired: 1500 },
-  { level: 7,  title: "Star Scholar",  emoji: "⭐", xpRequired: 2100 },
-  { level: 8,  title: "Luminary",      emoji: "🌟", xpRequired: 2800 },
-  { level: 9,  title: "Champion",      emoji: "👑", xpRequired: 3600 },
-  { level: 10, title: "Grand Master",  emoji: "🏆", xpRequired: 4500 },
+  { level: 1,  title: "Sprout",         emoji: "🌱", xpRequired: 0 },
+  { level: 2,  title: "Seedling",       emoji: "🌿", xpRequired: 120 },
+  { level: 3,  title: "Blossom",        emoji: "🌾", xpRequired: 300 },
+  { level: 4,  title: "Sapling",        emoji: "🌳", xpRequired: 560 },
+  { level: 5,  title: "Oak",            emoji: "🌲", xpRequired: 900 },
+  { level: 6,  title: "Trail Scout",    emoji: "🧭", xpRequired: 1320 },
+  { level: 7,  title: "Pathfinder",     emoji: "🗺️", xpRequired: 1820 },
+  { level: 8,  title: "Peak Climber",   emoji: "⛰️", xpRequired: 2400 },
+  { level: 9,  title: "Sky Learner",    emoji: "☁️", xpRequired: 3060 },
+  { level: 10, title: "Star Scholar",   emoji: "⭐", xpRequired: 3800 },
+  { level: 11, title: "Nova Mind",      emoji: "🌠", xpRequired: 4620 },
+  { level: 12, title: "Radiant Thinker",emoji: "✨", xpRequired: 5520 },
+  { level: 13, title: "Wisdom Keeper",  emoji: "📘", xpRequired: 6500 },
+  { level: 14, title: "Arc Mentor",     emoji: "🌀", xpRequired: 7560 },
+  { level: 15, title: "Sage",           emoji: "🦉", xpRequired: 8700 },
+  { level: 16, title: "Master Sage",    emoji: "🔮", xpRequired: 9920 },
+  { level: 17, title: "Sky Captain",    emoji: "🛩️", xpRequired: 11220 },
+  { level: 18, title: "Crown Bearer",   emoji: "👑", xpRequired: 12600 },
+  { level: 19, title: "Rune Reader",    emoji: "📜", xpRequired: 14060 },
+  { level: 20, title: "Visionary",      emoji: "🔭", xpRequired: 15600 },
+  { level: 21, title: "Polaris",        emoji: "🌌", xpRequired: 17220 },
+  { level: 22, title: "Aurora",         emoji: "🌈", xpRequired: 18920 },
+  { level: 23, title: "Thunder Mind",   emoji: "⚡", xpRequired: 20700 },
+  { level: 24, title: "Oracle",         emoji: "🧠", xpRequired: 22560 },
+  { level: 25, title: "Titan",          emoji: "🛡️", xpRequired: 24500 },
+  { level: 26, title: "Mythic",         emoji: "🐉", xpRequired: 26520 },
+  { level: 27, title: "Eclipse",        emoji: "🌘", xpRequired: 28620 },
+  { level: 28, title: "Solaris",        emoji: "☀️", xpRequired: 30800 },
+  { level: 29, title: "Legend",         emoji: "🏅", xpRequired: 33060 },
+  { level: 30, title: "Living Legend",  emoji: "🦅", xpRequired: 35400 },
+  { level: 31, title: "Celestial",      emoji: "🪐", xpRequired: 37820 },
+  { level: 32, title: "Galaxy Mind",    emoji: "🌌", xpRequired: 40320 },
+  { level: 33, title: "Eternal Scholar",emoji: "📚", xpRequired: 42900 },
+  { level: 34, title: "Infinity",       emoji: "♾️", xpRequired: 45560 },
+  { level: 35, title: "Grandmaster+",   emoji: "🏆", xpRequired: 48300 },
 ];
+
+export const MASTER_TIER_XP = 3000;
 
 export function getLevelForXP(xp: number): LevelInfo {
   let current = LEVELS[0];
@@ -46,6 +73,25 @@ export function getXPProgress(xp: number): { current: number; needed: number; pe
   return { current, needed, percent: Math.min(100, Math.round((current / needed) * 100)) };
 }
 
+export function getMasterTierInfo(xp: number): {
+  tier: number;
+  xpIntoTier: number;
+  xpPerTier: number;
+  atMaxLevel: boolean;
+} {
+  const maxLevel = LEVELS[LEVELS.length - 1];
+  if (xp < maxLevel.xpRequired) {
+    return { tier: 0, xpIntoTier: 0, xpPerTier: MASTER_TIER_XP, atMaxLevel: false };
+  }
+  const extraXP = xp - maxLevel.xpRequired;
+  return {
+    tier: Math.floor(extraXP / MASTER_TIER_XP) + 1,
+    xpIntoTier: extraXP % MASTER_TIER_XP,
+    xpPerTier: MASTER_TIER_XP,
+    atMaxLevel: true,
+  };
+}
+
 // ─── League System ──────────────────────────────────────────────────
 
 export interface LeagueInfo {
@@ -58,11 +104,11 @@ export interface LeagueInfo {
 }
 
 export const LEAGUES: LeagueInfo[] = [
-  { id: "bronze",  name: "Bronze League",  emoji: "🥉", minLevel: 1,  maxLevel: 3,  color: "text-amber-700" },
-  { id: "silver",  name: "Silver League",  emoji: "🥈", minLevel: 4,  maxLevel: 7,  color: "text-slate-400" },
-  { id: "gold",    name: "Gold League",    emoji: "🥇", minLevel: 8,  maxLevel: 12, color: "text-yellow-500" },
-  { id: "diamond", name: "Diamond League", emoji: "💎", minLevel: 13, maxLevel: 17, color: "text-cyan-400" },
-  { id: "master",  name: "Master League",  emoji: "👑", minLevel: 18, maxLevel: 999, color: "text-purple-500" },
+  { id: "bronze",  name: "Bronze League",  emoji: "🥉", minLevel: 1,  maxLevel: 6,  color: "text-amber-700" },
+  { id: "silver",  name: "Silver League",  emoji: "🥈", minLevel: 7,  maxLevel: 13, color: "text-slate-400" },
+  { id: "gold",    name: "Gold League",    emoji: "🥇", minLevel: 14, maxLevel: 20, color: "text-yellow-500" },
+  { id: "diamond", name: "Diamond League", emoji: "💎", minLevel: 21, maxLevel: 28, color: "text-cyan-400" },
+  { id: "master",  name: "Master League",  emoji: "👑", minLevel: 29, maxLevel: 35, color: "text-purple-500" },
 ];
 
 export function getLeagueForLevel(level: number): LeagueInfo {
@@ -604,6 +650,12 @@ export function getThemeColors(themeId: string | null): {
       return { gradient: "from-teal-500 to-blue-600", accent: "text-teal-500", bg: "bg-teal-50" };
     case "theme_forest":
       return { gradient: "from-green-500 to-emerald-600", accent: "text-green-500", bg: "bg-green-50" };
+    case "theme_cyber":
+      return { gradient: "from-fuchsia-600 to-cyan-500", accent: "text-fuchsia-500", bg: "bg-fuchsia-50" };
+    case "theme_gold":
+      return { gradient: "from-amber-400 to-yellow-500", accent: "text-amber-500", bg: "bg-amber-50" };
+    case "theme_diamond":
+      return { gradient: "from-sky-400 to-indigo-500", accent: "text-sky-500", bg: "bg-sky-50" };
     default:
       return { gradient: "from-blue-500 to-indigo-600", accent: "text-blue-500", bg: "bg-blue-50" };
   }

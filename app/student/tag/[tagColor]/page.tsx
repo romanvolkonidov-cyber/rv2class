@@ -3,9 +3,12 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchStudents, Student } from "@/lib/firebase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Loader2, Tag } from "lucide-react";
+import { GameProfile, getGameProfile } from "@/lib/gamification";
+import PetAvatar from "@/components/PetAvatar";
+import GrowthTree from "@/components/GrowthTree";
+import BadgeDisplay from "@/components/BadgeDisplay";
 
 const TAG_COLORS = {
   red: {
@@ -71,6 +74,7 @@ export default function TagStudentsPage() {
   const router = useRouter();
   const tagColor = params.tagColor as string;
   const [students, setStudents] = useState<Student[]>([]);
+  const [profilesByStudent, setProfilesByStudent] = useState<Record<string, GameProfile>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,6 +88,13 @@ export default function TagStudentsPage() {
       // Filter students by tag
       const taggedStudents = allStudents.filter((s) => s.tag === tagColor);
       setStudents(taggedStudents);
+      const profileEntries = await Promise.all(
+        taggedStudents.map(async (student) => {
+          const profile = await getGameProfile(student.id);
+          return [student.id, profile] as const;
+        })
+      );
+      setProfilesByStudent(Object.fromEntries(profileEntries));
     } catch (error) {
       console.error("Error loading students:", error);
     } finally {
@@ -138,24 +149,53 @@ export default function TagStudentsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {students.map((student) => (
-                  <Button
-                    key={student.id}
-                    size="lg"
-                    onClick={() => handleStudentClick(student.id)}
-                    className="h-auto py-6 min-h-[64px] bg-white/40 hover:bg-white/60 border border-gray-200/50 hover:border-gray-300/50 text-gray-900 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-100 backdrop-blur-xl touch-manipulation select-none"
-                    variant="outline"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="font-bold text-xl">{student.name}</span>
-                      {student.teacher && (
-                        <span className="text-xs text-gray-600">
-                          Учитель: {student.teacher}
-                        </span>
-                      )}
+                {students.map((student) => {
+                  const profile = profilesByStudent[student.id];
+                  return (
+                    <div
+                      key={student.id}
+                      className="h-auto p-4 bg-white/40 hover:bg-white/60 border border-gray-200/50 hover:border-gray-300/50 text-gray-900 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-100 backdrop-blur-xl rounded-xl"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="font-bold text-xl">{student.name}</span>
+                        {student.teacher && (
+                          <span className="text-xs text-gray-600">
+                            Учитель: {student.teacher}
+                          </span>
+                        )}
+                        {profile?.petId && (
+                          <PetAvatar
+                            petId={profile.petId}
+                            accessories={profile.petAccessories || []}
+                            size="md"
+                            className="scale-105"
+                          />
+                        )}
+                        {profile && (
+                          <div className="w-full">
+                            <div className="flex items-center justify-center mb-2">
+                              <GrowthTree health={profile.treeHealth} size="sm" />
+                            </div>
+                            <div className="flex items-center justify-center">
+                              <BadgeDisplay
+                                unlockedBadges={profile.unlockedBadges}
+                                purchasedRewards={profile.purchasedRewards}
+                                compact
+                              />
+                            </div>
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => handleStudentClick(student.id)}
+                          className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Войти как {student.name}
+                        </Button>
+                      </div>
                     </div>
-                  </Button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

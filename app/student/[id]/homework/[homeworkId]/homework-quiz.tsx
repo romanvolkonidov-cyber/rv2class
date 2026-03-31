@@ -6,7 +6,7 @@ import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHo
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2, Film, Image as ImageIcon, Clock, Zap, Star, Coins } from "lucide-react";
-import { awardHomeworkXP, calculateXP, getLevelForXP, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
+import { awardHomeworkXP, calculateXP, getLevelForXP, getMasterTierInfo, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import confetti from "canvas-confetti";
 import PetAvatar from "@/components/PetAvatar";
@@ -294,6 +294,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     const xp = awardResult?.xpBreakdown;
     const level = awardResult ? getLevelForXP(awardResult.updatedProfile.xp) : null;
     const progress = awardResult ? getXPProgress(awardResult.updatedProfile.xp) : null;
+    const masterTier = awardResult ? getMasterTierInfo(awardResult.updatedProfile.xp) : null;
     const streakSummary = awardResult
       ? awardResult.streakOutcome === "kept"
         ? "Серия продолжена"
@@ -426,6 +427,11 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                         </div>
                         {progress.needed > 0 && (
                           <div className="text-xs text-gray-500 mt-1">{progress.current}/{progress.needed} to next level</div>
+                        )}
+                        {progress.needed === 0 && masterTier?.atMaxLevel && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Master Tier {masterTier.tier}: {masterTier.xpIntoTier}/{masterTier.xpPerTier}
+                          </div>
                         )}
                       </div>
                     </div>

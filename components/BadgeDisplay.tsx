@@ -16,6 +16,7 @@ type CollectionItem =
 
 export default function BadgeDisplay({ unlockedBadges, compact = false, purchasedRewards = [] }: BadgeDisplayProps) {
   const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
+  const [showAllCompact, setShowAllCompact] = useState(false);
   const unlocked = useMemo(() => BADGES.filter(b => unlockedBadges.includes(b.id)), [unlockedBadges]);
   const purchased = useMemo(
     () => SHOP_REWARDS.filter(r => purchasedRewards.includes(r.id)),
@@ -29,6 +30,10 @@ export default function BadgeDisplay({ unlockedBadges, compact = false, purchase
 
   if (compact) {
     if (unlocked.length === 0 && purchased.length === 0) return null;
+    const allItems: CollectionItem[] = [
+      ...unlocked.map(data => ({ kind: "badge" as const, data, unlocked: true })),
+      ...purchased.map(data => ({ kind: "reward" as const, data })),
+    ];
     const compactItems: CollectionItem[] = [
       ...unlocked.slice(0, 5).map(data => ({ kind: "badge" as const, data, unlocked: true })),
       ...purchased.slice(0, 3).map(data => ({ kind: "reward" as const, data })),
@@ -48,9 +53,46 @@ export default function BadgeDisplay({ unlockedBadges, compact = false, purchase
             </button>
           ))}
           {(unlocked.length > 5 || purchased.length > 3) && (
-            <span className="text-xs text-gray-500 self-center">+{Math.max(0, unlocked.length - 5) + Math.max(0, purchased.length - 3)}</span>
+            <button
+              type="button"
+              onClick={() => setShowAllCompact(true)}
+              className="text-xs text-gray-500 self-center hover:text-gray-700"
+            >
+              +{Math.max(0, unlocked.length - 5) + Math.max(0, purchased.length - 3)}
+            </button>
           )}
         </div>
+
+        {showAllCompact && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowAllCompact(false)} />
+            <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl border">
+              <button
+                type="button"
+                onClick={() => setShowAllCompact(false)}
+                className="absolute top-3 right-3 p-1 rounded-md hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="font-bold text-gray-900 mb-3">Все достижения и награды</div>
+              <div className="flex flex-wrap gap-2">
+                {allItems.map(item => (
+                  <button
+                    key={`all-${item.kind}-${item.data.id}`}
+                    type="button"
+                    onClick={() => {
+                      setShowAllCompact(false);
+                      setSelectedItem(item);
+                    }}
+                    className="px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-700 hover:bg-slate-200"
+                  >
+                    {item.data.emoji} {item.data.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedItem && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
