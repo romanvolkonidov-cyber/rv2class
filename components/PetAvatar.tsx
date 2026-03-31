@@ -5,6 +5,7 @@ interface PetAvatarProps {
   accessories?: string[];
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  frameId?: string | null;
 }
 
 export const AVAILABLE_PETS = [
@@ -25,15 +26,46 @@ const sizeClasses = {
   xl: "w-48 h-48 text-8xl",
 };
 
-export default function PetAvatar({ petId, accessories = [], size = "md", className = "" }: PetAvatarProps) {
+const frameStyles: Record<string, string> = {
+  frame_silver: "ring-4 ring-slate-300 shadow-[0_0_0_6px_rgba(226,232,240,0.9)]",
+  frame_gold: "ring-4 ring-amber-400 shadow-[0_0_0_6px_rgba(251,191,36,0.35)]",
+  frame_flower: "ring-4 ring-pink-300 shadow-[0_0_0_6px_rgba(244,114,182,0.2)]",
+  frame_star: "ring-4 ring-yellow-300 shadow-[0_0_0_6px_rgba(253,224,71,0.25)]",
+  frame_fire: "ring-4 ring-orange-500 shadow-[0_0_0_6px_rgba(249,115,22,0.35)]",
+  frame_emerald: "ring-4 ring-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.3)]",
+  frame_ruby: "ring-4 ring-rose-500 shadow-[0_0_0_6px_rgba(244,63,94,0.3)]",
+  frame_diamond: "ring-4 ring-cyan-300 shadow-[0_0_0_7px_rgba(125,211,252,0.35)]",
+};
+
+const frameDecorations: Record<string, string> = {
+  frame_flower: "🌸",
+  frame_star: "⭐",
+  frame_fire: "🔥",
+  frame_emerald: "💚",
+  frame_ruby: "❤️",
+  frame_diamond: "💎",
+};
+
+export default function PetAvatar({ petId, accessories = [], size = "md", className = "", frameId = null }: PetAvatarProps) {
   const pet = AVAILABLE_PETS.find(p => p.id === petId) || AVAILABLE_PETS[0];
+  const frameClass = frameId ? frameStyles[frameId] || "" : "";
+  const frameDecoration = frameId ? frameDecorations[frameId] : null;
 
   return (
-    <div className={`relative flex items-center justify-center rounded-3xl border-4 ${pet.color} shadow-inner ${sizeClasses[size]} ${className}`}>
+    <div className={`relative flex items-center justify-center rounded-3xl border-4 ${pet.color} shadow-inner ${sizeClasses[size]} ${frameClass} ${className}`}>
       {/* Base Pet Emoji */}
       <span className="relative z-10 transform hover:scale-110 transition-transform duration-300">
         {pet.emoji}
       </span>
+
+      {frameDecoration && (
+        <>
+          <span className="absolute -top-2 -left-1 z-30 text-lg">{frameDecoration}</span>
+          <span className="absolute -top-2 -right-1 z-30 text-lg">{frameDecoration}</span>
+          <span className="absolute -bottom-2 -left-1 z-30 text-lg">{frameDecoration}</span>
+          <span className="absolute -bottom-2 -right-1 z-30 text-lg">{frameDecoration}</span>
+        </>
+      )}
 
       {/* Accessories Overlay (Visual representation mapped from accessory IDs) */}
       {/* NECK SLOT */}
