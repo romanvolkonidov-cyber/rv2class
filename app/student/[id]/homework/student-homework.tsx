@@ -32,6 +32,7 @@ import { BookOpen, Loader2, Trophy, X, Check, Star, TrendingUp, XCircle, Zap, Co
 import { getGameProfile, getLevelForXP, getXPProgress, GameProfile } from "@/lib/gamification";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
+import PetAvatar from "@/components/PetAvatar";
 
 // Light theme to match the app
 const lightTheme = createTheme({
@@ -101,6 +102,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const [showRatingDetails, setShowRatingDetails] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
+  const [petReaction, setPetReaction] = useState<string | null>(null);
 
   const normalizeAnswerText = (value: string | number | null | undefined) =>
     String(value ?? "")
@@ -111,6 +113,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
       .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
+
+  const triggerPetReaction = (emoji: string) => {
+    setPetReaction(emoji);
+    setTimeout(() => setPetReaction(null), 2000);
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -227,6 +234,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   };
 
   const handleStartHomework = (assignmentId: string) => {
+    if (gameProfile?.petId) {
+      triggerPetReaction("🚀");
+      setTimeout(() => router.push(`/student/${studentId}/homework/${assignmentId}`), 220);
+      return;
+    }
     router.push(`/student/${studentId}/homework/${assignmentId}`);
   };
   
@@ -250,6 +262,12 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const getReportForAssignment = (assignmentId: string) => {
     return reports.find(r => r.homeworkId === assignmentId);
   };
+
+  useEffect(() => {
+    if (gameProfile?.petId) {
+      triggerPetReaction("👋");
+    }
+  }, [gameProfile?.petId]);
 
   const getStatusInfo = (assignment: HomeworkAssignment) => {
     const report = getReportForAssignment(assignment.id);
@@ -873,6 +891,24 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                 Close
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {gameProfile?.petId && (
+        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+          <div className="relative">
+            {petReaction && (
+              <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                {petReaction}
+              </div>
+            )}
+            <PetAvatar
+              petId={gameProfile.petId}
+              accessories={gameProfile.petAccessories || []}
+              size="lg"
+              className="scale-110 shadow-xl"
+            />
           </div>
         </div>
       )}

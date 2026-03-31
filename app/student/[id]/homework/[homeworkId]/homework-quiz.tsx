@@ -9,6 +9,7 @@ import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2
 import { awardHomeworkXP, calculateXP, getLevelForXP, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import confetti from "canvas-confetti";
+import PetAvatar from "@/components/PetAvatar";
 
 interface HomeworkQuizProps {
   studentId: string;
@@ -35,6 +36,8 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [correctCount, setCorrectCount] = useState(0);
   const [awardResult, setAwardResult] = useState<AwardResult | null>(null);
   const [showXPAnimation, setShowXPAnimation] = useState(false);
+  const [quizPet, setQuizPet] = useState<{ petId: string; accessories: string[] } | null>(null);
+  const [petReaction, setPetReaction] = useState<string | null>(null);
 
   // Timer
   useEffect(() => {
@@ -60,6 +63,11 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
       .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
+
+  const triggerPetReaction = (emoji: string) => {
+    setPetReaction(emoji);
+    setTimeout(() => setPetReaction(null), 2000);
+  };
 
   useEffect(() => {
     loadHomeworkQuiz();
@@ -101,6 +109,9 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
       // Load partial progress
       try {
         const profile = await getGameProfile(studentId);
+        if (profile.petId) {
+          setQuizPet({ petId: profile.petId, accessories: profile.petAccessories || [] });
+        }
         if (profile.progress && profile.progress[homeworkId]) {
           const hwProg = profile.progress[homeworkId];
           const restoredAnswers: Record<string, string> = {};
@@ -152,8 +163,10 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     if (isCorrect) {
       setCorrectCount(prev => prev + 1);
       playSound("success");
+      triggerPetReaction(["👏", "😄", "🎉", "⭐"][Math.floor(Math.random() * 4)]);
     } else {
       playSound("error");
+      triggerPetReaction("💪");
     }
 
     // Save progress asynchronously
@@ -454,6 +467,18 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
             </CardContent>
           </Card>
         </div>
+        {quizPet && (
+          <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+            <div className="relative">
+              {petReaction && (
+                <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                  {petReaction}
+                </div>
+              )}
+              <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+            </div>
+          </div>
+        )}
       </main>
     );
   }
@@ -733,6 +758,18 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
         }
         .animate-shake { animation: shake 0.5s ease-in-out; }
       `}</style>
+      {quizPet && (
+        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+          <div className="relative">
+            {petReaction && (
+              <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                {petReaction}
+              </div>
+            )}
+            <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

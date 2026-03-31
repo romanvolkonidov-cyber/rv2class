@@ -48,6 +48,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [uncompletedCount, setUncompletedCount] = useState<number>(0);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [showShop, setShowShop] = useState(false);
+  const [petReaction, setPetReaction] = useState<string | null>(null);
 
   const teacherName = student.teacher || "Roman";
 
@@ -101,6 +102,11 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
   const colors = getTeacherColor(student.teacher);
 
+  const triggerPetReaction = (emoji: string) => {
+    setPetReaction(emoji);
+    setTimeout(() => setPetReaction(null), 2000);
+  };
+
   const handleJoinClass = async () => {
     setIsJoining(true);
     const teacherKey = teacherName.toLowerCase();
@@ -117,6 +123,11 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   };
 
   const handleHomeworks = () => {
+    if (gameProfile?.petId) {
+      triggerPetReaction("👋");
+      setTimeout(() => router.push(`/student/${student.id}/homework`), 220);
+      return;
+    }
     router.push(`/student/${student.id}/homework`);
   };
 
@@ -249,7 +260,11 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   {nextShopUnlock.reward ? (
                     <div>
                       До награды {nextShopUnlock.reward.emoji} <span className="font-semibold">{nextShopUnlock.reward.name}</span>:
-                      <span className="font-bold"> {nextShopUnlock.coinsNeeded} монет</span>
+                      {nextShopUnlock.coinsNeeded > 0 ? (
+                        <span className="font-bold"> {nextShopUnlock.coinsNeeded} монет</span>
+                      ) : (
+                        <span className="font-bold text-emerald-700"> можно купить прямо сейчас</span>
+                      )}
                     </div>
                   ) : (
                     <div>Все награды магазина уже куплены 🎉</div>
@@ -341,8 +356,13 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               {gameProfile.petId && (
                 <div className="flex flex-col items-center">
                   <h3 className="text-sm font-bold text-gray-700 mb-3">Твой питомец</h3>
-                  <div className="animate-bounce" style={{ animationDuration: '3s' }}>
-                    <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" />
+                  <div className="relative animate-bounce" style={{ animationDuration: '3s' }}>
+                    {petReaction && (
+                      <div className="absolute -top-9 right-1 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                        {petReaction}
+                      </div>
+                    )}
+                    <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" />
                   </div>
                   <p className="text-xs text-gray-500 mt-3 font-medium">Покупай аксессуары в магазине!</p>
                 </div>
