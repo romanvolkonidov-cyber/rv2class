@@ -51,6 +51,16 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const normalizeAnswerText = (value: string | number | null | undefined) =>
+    String(value ?? "")
+      .normalize("NFKC")
+      .replace(/\u00A0/g, " ")
+      .replace(/[’‘`´]/g, "'")
+      .replace(/[“”]/g, "\"")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
   useEffect(() => {
     loadHomeworkQuiz();
   }, [homeworkId, studentId]);
@@ -126,9 +136,9 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     if (!question) return false;
     if (typeof question.correctAnswer === "number" && question.options) {
       const correctOption = question.options[question.correctAnswer];
-      return String(answer).trim().toLowerCase() === String(correctOption).trim().toLowerCase();
+      return normalizeAnswerText(answer) === normalizeAnswerText(correctOption);
     }
-    return String(answer).trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
+    return normalizeAnswerText(answer) === normalizeAnswerText(question.correctAnswer);
   }, [questions]);
 
   const handleAnswerSelect = (questionId: string, answer: string) => {

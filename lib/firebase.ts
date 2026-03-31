@@ -21,6 +21,16 @@ const serializeTimestamp = (value: any): any => {
   return value;
 };
 
+const normalizeAnswerText = (value: string | number | null | undefined): string =>
+  String(value ?? "")
+    .normalize("NFKC")
+    .replace(/\u00A0/g, " ")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/[“”]/g, "\"")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
 const firebaseConfig = {
   apiKey: "AIzaSyApqg1eUjbt0ZBzn3JNEPtfLz6gI4314xQ",
   authDomain: "tracking-budget-app.firebaseapp.com",
@@ -332,15 +342,15 @@ export const submitHomeworkAnswers = async (
           // Compare with the option at that index
           const correctOption = question.options[question.correctAnswer];
           // Case-insensitive comparison with trimming
-          const userAnswerNorm = String(answer.answer).trim().toLowerCase();
-          const correctOptionNorm = String(correctOption).trim().toLowerCase();
+          const userAnswerNorm = normalizeAnswerText(answer.answer);
+          const correctOptionNorm = normalizeAnswerText(correctOption);
           isCorrect = correctOptionNorm === userAnswerNorm;
           console.log(`  Comparing index ${question.correctAnswer} (option: "${correctOption}") with user answer`);
           console.log(`  Normalized: "${correctOptionNorm}" === "${userAnswerNorm}"`);
         } else {
           // Direct string comparison with normalization
-          const userAnswerNorm = String(answer.answer).trim().toLowerCase();
-          const correctAnswerNorm = String(question.correctAnswer).trim().toLowerCase();
+          const userAnswerNorm = normalizeAnswerText(answer.answer);
+          const correctAnswerNorm = normalizeAnswerText(question.correctAnswer);
           isCorrect = correctAnswerNorm === userAnswerNorm;
           console.log(`  Direct string comparison`);
           console.log(`  Normalized: "${correctAnswerNorm}" === "${userAnswerNorm}"`);

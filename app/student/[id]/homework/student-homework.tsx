@@ -102,6 +102,16 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const [isClient, setIsClient] = useState(false);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
 
+  const normalizeAnswerText = (value: string | number | null | undefined) =>
+    String(value ?? "")
+      .normalize("NFKC")
+      .replace(/\u00A0/g, " ")
+      .replace(/[’‘`´]/g, "'")
+      .replace(/[“”]/g, "\"")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
   useEffect(() => {
     setIsClient(true);
     loadHomework();
@@ -635,10 +645,10 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                       // If correctAnswer is a number (index), compare it with the option at that index
                       if (typeof question.correctAnswer === 'number' && question.options) {
                         const correctOption = question.options[question.correctAnswer];
-                        isCorrect = String(submittedAnswer) === String(correctOption);
+                        isCorrect = normalizeAnswerText(submittedAnswer) === normalizeAnswerText(correctOption);
                       } else {
                         // Direct string comparison
-                        isCorrect = String(submittedAnswer) === String(question.correctAnswer);
+                        isCorrect = normalizeAnswerText(submittedAnswer) === normalizeAnswerText(question.correctAnswer);
                       }
                     }
                     
