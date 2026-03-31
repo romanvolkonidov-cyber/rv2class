@@ -673,6 +673,30 @@ export function getThemeVisualConfig(themeId: string | null): {
         buttonGradient: "linear-gradient(to right, #3b82f6, #2563eb)",
         buttonHoverGradient: "linear-gradient(to right, #2563eb, #1d4ed8)",
       };
+    case "theme_purple":
+      return {
+        primary: "#7c3aed",
+        secondary: "#4f46e5",
+        surfaceGradient: "linear-gradient(to bottom right, #faf5ff, #ede9fe, #e0e7ff)",
+        buttonGradient: "linear-gradient(to right, #7c3aed, #4338ca)",
+        buttonHoverGradient: "linear-gradient(to right, #6d28d9, #3730a3)",
+      };
+    case "theme_sunset":
+      return {
+        primary: "#ea580c",
+        secondary: "#e11d48",
+        surfaceGradient: "linear-gradient(to bottom right, #fff7ed, #ffedd5, #ffe4e6)",
+        buttonGradient: "linear-gradient(to right, #ea580c, #e11d48)",
+        buttonHoverGradient: "linear-gradient(to right, #c2410c, #be123c)",
+      };
+    case "theme_ocean":
+      return {
+        primary: "#0f766e",
+        secondary: "#1d4ed8",
+        surfaceGradient: "linear-gradient(to bottom right, #f0fdfa, #cffafe, #dbeafe)",
+        buttonGradient: "linear-gradient(to right, #0f766e, #1d4ed8)",
+        buttonHoverGradient: "linear-gradient(to right, #115e59, #1e40af)",
+      };
     case "theme_forest":
       return {
         primary: "#16a34a",

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { countUncompletedHomework } from "@/lib/firebase";
-import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeColors, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
@@ -174,8 +174,10 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const nextLevel = level ? getNextLevel(level.level) : null;
   const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
   const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
-  const themeColors = gameProfile && gameProfile.equippedTheme ? getThemeColors(gameProfile.equippedTheme) : null;
-  const activeGradient = themeColors?.gradient || colors.gradient;
+  const themeVisual = getThemeVisualConfig(gameProfile?.equippedTheme || null);
+  const welcomeHeaderGradient = gameProfile?.equippedTheme
+    ? themeVisual.buttonGradient
+    : "linear-gradient(to right, rgba(59,130,246,0.92), rgba(8,145,178,0.92))";
   const isFirstTimeStudent = gameProfile
     ? gameProfile.totalHomeworksCompleted === 0 && gameProfile.purchasedRewards.length === 0 && gameProfile.unlockedBadges.length === 0
     : false;
@@ -192,7 +194,10 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
       <div className="max-w-2xl w-full space-y-4 relative z-10">
         {/* Welcome Card */}
         <div className="glass-panel rounded-3xl overflow-hidden shadow-2xl">
-          <div className={`bg-gradient-to-r ${activeGradient} p-6 sm:p-8 text-white`}>
+          <div
+            className="p-6 sm:p-8 text-white"
+            style={{ backgroundImage: welcomeHeaderGradient }}
+          >
             <div className="flex items-center gap-4">
               <div className="glass-surface-dark p-3 rounded-2xl">
                 <UserCircle className="h-10 w-10 text-white" />
@@ -365,7 +370,10 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
             {/* Join Lesson Button */}
             <div>
-              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${activeGradient} shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20`}>
+              <div
+                className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/20"
+                style={{ backgroundImage: welcomeHeaderGradient }}
+              >
                 <button
                   onClick={handleJoinClass}
                   disabled={isJoining}

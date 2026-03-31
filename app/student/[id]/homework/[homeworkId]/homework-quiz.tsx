@@ -6,7 +6,7 @@ import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHo
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2, Film, Image as ImageIcon, Clock, Zap, Star, Coins } from "lucide-react";
-import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getThemeColors, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
+import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getThemeVisualConfig, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import confetti from "canvas-confetti";
 import PetAvatar from "@/components/PetAvatar";
@@ -102,7 +102,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
     setPetPhrase(next);
   };
-  const themeColors = getThemeColors(equippedTheme);
+  const themeVisual = getThemeVisualConfig(equippedTheme);
   const pageBgClass = equippedTheme === "theme_forest"
     ? "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100"
     : equippedTheme === "theme_sunset"
@@ -390,7 +390,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
         <div className="max-w-2xl mx-auto mt-8 space-y-6">
           {/* Score Card */}
           <Card className="backdrop-blur-sm bg-white/90 shadow-xl overflow-hidden">
-            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white text-center pb-8`}>
+            <CardHeader className="text-white text-center pb-8" style={{ backgroundImage: themeVisual.buttonGradient }}>
               <CheckCircle className="h-16 w-16 mx-auto mb-3" />
               <CardTitle className="text-3xl font-bold">Homework Complete!</CardTitle>
               <CardDescription className="text-green-100 text-lg mt-1">
@@ -570,7 +570,8 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
 
                 <Button
                   onClick={() => router.push(`/student/${studentId}/homework`)}
-                  className={`bg-gradient-to-r ${themeColors.gradient} text-white font-semibold px-8 py-6 text-lg`}
+                  className="text-white font-semibold px-8 py-6 text-lg"
+                  style={{ backgroundImage: themeVisual.buttonGradient }}
                 >
                   <ArrowLeft className="mr-2 h-5 w-5" />
                   Back to Homework List
@@ -609,7 +610,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
           </Button>
 
           <Card className="backdrop-blur-sm bg-white/90 shadow-xl">
-            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white rounded-t-lg shadow-inner`}>
+            <CardHeader className="text-white rounded-t-lg shadow-inner" style={{ backgroundImage: themeVisual.buttonGradient }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <BookOpen className="h-8 w-8 drop-shadow-md" />
@@ -646,8 +647,11 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                    className={`bg-gradient-to-r ${themeColors.gradient} h-2.5 rounded-full transition-all duration-500`}
-                  style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                  className="h-2.5 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                    backgroundImage: themeVisual.buttonGradient
+                  }}
                 />
               </div>
             </CardContent>
@@ -838,7 +842,8 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                   <Button
                     onClick={handleNext}
                     disabled={!isCurrentAnswered}
-                    className={`bg-gradient-to-r ${themeColors.gradient} text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundImage: themeVisual.buttonGradient }}
                   >
                     Next <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
                   </Button>
