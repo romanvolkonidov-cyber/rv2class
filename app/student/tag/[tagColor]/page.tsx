@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchStudents, Student } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Users, Loader2, Tag } from "lucide-react";
-import { GameProfile, getGameProfile } from "@/lib/gamification";
+import { GameProfile, getGameProfile, getLeagueForLevel, getLevelForXP } from "@/lib/gamification";
 import PetAvatar from "@/components/PetAvatar";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
@@ -151,6 +151,8 @@ export default function TagStudentsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {students.map((student) => {
                   const profile = profilesByStudent[student.id];
+                  const level = profile ? getLevelForXP(profile.xp) : null;
+                  const league = level ? getLeagueForLevel(level.level) : null;
                   return (
                     <div
                       key={student.id}
@@ -173,6 +175,11 @@ export default function TagStudentsPage() {
                         )}
                         {profile && (
                           <div className="w-full">
+                            {league && (
+                              <div className="text-center text-xs font-semibold text-indigo-700 mb-2">
+                                Лига: {league.emoji} {league.name}
+                              </div>
+                            )}
                             <div className="flex items-center justify-center mb-2">
                               <GrowthTree health={profile.treeHealth} size="sm" />
                             </div>

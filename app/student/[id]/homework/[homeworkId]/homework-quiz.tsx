@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHomework, submitHomeworkAnswers, fetchHomeworkReports, Question, HomeworkAssignment } from "@/lib/firebase";
+import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHomework, submitHomeworkAnswers, fetchHomeworkReports, fetchAllStudentRatings, Question, HomeworkAssignment } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2, Film, Image as ImageIcon, Clock, Zap, Star, Coins } from "lucide-react";
-import { awardHomeworkXP, calculateXP, getLevelForXP, getMasterTierInfo, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
+import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import confetti from "canvas-confetti";
 import PetAvatar from "@/components/PetAvatar";
@@ -38,6 +38,8 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [showXPAnimation, setShowXPAnimation] = useState(false);
   const [quizPet, setQuizPet] = useState<{ petId: string; accessories: string[] } | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
+  const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
+  const [studentGlobalRank, setStudentGlobalRank] = useState<number | null>(null);
 
   // Timer
   useEffect(() => {
@@ -67,6 +69,33 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const triggerPetReaction = (emoji: string) => {
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
+  };
+
+  const formatOrdinal = (rank: number) => {
+    if (rank % 100 >= 11 && rank % 100 <= 13) return `${rank}th`;
+    if (rank % 10 === 1) return `${rank}st`;
+    if (rank % 10 === 2) return `${rank}nd`;
+    if (rank % 10 === 3) return `${rank}rd`;
+    return `${rank}th`;
+  };
+
+  const loadLeaderboardSnapshot = async () => {
+    try {
+      const ratings = await fetchAllStudentRatings();
+      const ranked = ratings.filter((r: any) => r.completedHomeworks > 0);
+      const topRows = ranked.slice(0, 3);
+      const me = ranked.find((r: any) => r.studentId === studentId) || null;
+      const meRank = me?.rank || null;
+      const merged = me && !topRows.some((r: any) => r.studentId === me.studentId)
+        ? [...topRows, me]
+        : topRows;
+      setLeaderboardRows(merged);
+      setStudentGlobalRank(meRank);
+    } catch (error) {
+      console.error("Error loading leaderboard snapshot:", error);
+      setLeaderboardRows([]);
+      setStudentGlobalRank(null);
+    }
   };
 
   useEffect(() => {
@@ -266,6 +295,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
           );
           setAwardResult(award);
           setShowXPAnimation(true);
+          await loadLeaderboardSnapshot();
         } catch (err) {
           console.error("Error awarding XP:", err);
         }
@@ -293,6 +323,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   if (submitted && results) {
     const xp = awardResult?.xpBreakdown;
     const level = awardResult ? getLevelForXP(awardResult.updatedProfile.xp) : null;
+    const league = level ? getLeagueForLevel(level.level) : null;
     const progress = awardResult ? getXPProgress(awardResult.updatedProfile.xp) : null;
     const masterTier = awardResult ? getMasterTierInfo(awardResult.updatedProfile.xp) : null;
     const streakSummary = awardResult
@@ -451,6 +482,32 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {league && (
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200">
+                    <div className="text-sm font-bold text-blue-800">Твоя лига: {league.emoji} {league.name}</div>
+                    {studentGlobalRank && (
+                      <div className="text-xs text-blue-700 mt-1">
+                        Место в общем рейтинге: <span className="font-bold">{formatOrdinal(studentGlobalRank)}</span>
+                      </div>
+                    )}
+                    {leaderboardRows.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        {leaderboardRows.map((row: any) => (
+                          <div
+                            key={row.studentId}
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                              row.studentId === studentId ? "bg-blue-100 border border-blue-300" : "bg-white/80"
+                            }`}
+                          >
+                            <div className="font-semibold text-gray-800">{formatOrdinal(row.rank)} {row.studentName}</div>
+                            <div className="text-gray-600">{Math.round(row.averagePercentage)}%</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
