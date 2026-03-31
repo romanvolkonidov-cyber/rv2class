@@ -103,6 +103,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const [isClient, setIsClient] = useState(false);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
+  const [petPhrase, setPetPhrase] = useState<string | null>(null);
 
   const normalizeAnswerText = (value: string | number | null | undefined) =>
     String(value ?? "")
@@ -117,6 +118,36 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const triggerPetReaction = (emoji: string) => {
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
+  };
+  const petPhrases = [
+    "Great job!",
+    "You can do it!",
+    "Let’s learn!",
+    "Keep going!",
+    "One more step!",
+    "Nice focus!",
+    "You are smart!",
+    "Try your best!",
+    "Awesome work!",
+    "Stay curious!",
+    "You are amazing!",
+    "Let’s win today!",
+    "Small steps, big win!",
+    "You got this!",
+    "High five!",
+    "Ready to learn?",
+    "Brave and bright!",
+    "Super effort!",
+    "Keep shining!",
+    "Let’s go!"
+  ];
+  const togglePetPhrase = () => {
+    if (petPhrase) {
+      setPetPhrase(null);
+      return;
+    }
+    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
+    setPetPhrase(next);
   };
 
   useEffect(() => {
@@ -898,19 +929,26 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
       )}
 
       {gameProfile?.petId && (
-        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
           <div className="relative">
             {petReaction && (
               <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
                 {petReaction}
               </div>
             )}
-            <PetAvatar
-              petId={gameProfile.petId}
-              accessories={gameProfile.petAccessories || []}
-              size="lg"
-              className="scale-110 shadow-xl"
-            />
+            {petPhrase && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+                {petPhrase}
+              </div>
+            )}
+            <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
+              <PetAvatar
+                petId={gameProfile.petId}
+                accessories={gameProfile.petAccessories || []}
+                size="lg"
+                className="scale-110 shadow-xl"
+              />
+            </button>
           </div>
         </div>
       )}

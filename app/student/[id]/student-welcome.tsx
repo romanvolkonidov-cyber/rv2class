@@ -49,6 +49,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [showShop, setShowShop] = useState(false);
   const [petReaction, setPetReaction] = useState<string | null>(null);
+  const [petPhrase, setPetPhrase] = useState<string | null>(null);
 
   const teacherName = student.teacher || "Roman";
 
@@ -105,6 +106,36 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const triggerPetReaction = (emoji: string) => {
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
+  };
+  const petPhrases = [
+    "Great job!",
+    "You can do it!",
+    "Let’s learn!",
+    "Keep going!",
+    "One more step!",
+    "Nice focus!",
+    "You are smart!",
+    "Try your best!",
+    "Awesome work!",
+    "Stay curious!",
+    "You are amazing!",
+    "Let’s win today!",
+    "Small steps, big win!",
+    "You got this!",
+    "High five!",
+    "Ready to learn?",
+    "Brave and bright!",
+    "Super effort!",
+    "Keep shining!",
+    "Let’s go!"
+  ];
+  const togglePetPhrase = () => {
+    if (petPhrase) {
+      setPetPhrase(null);
+      return;
+    }
+    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
+    setPetPhrase(next);
   };
 
   const handleJoinClass = async () => {
@@ -370,7 +401,14 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                         {petReaction}
                       </div>
                     )}
-                    <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" />
+                    {petPhrase && (
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+                        {petPhrase}
+                      </div>
+                    )}
+                    <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
+                      <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" />
+                    </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-3 font-medium">Покупай аксессуары в магазине!</p>
                 </div>

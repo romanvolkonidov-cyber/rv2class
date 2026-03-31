@@ -38,6 +38,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [showXPAnimation, setShowXPAnimation] = useState(false);
   const [quizPet, setQuizPet] = useState<{ petId: string; accessories: string[] } | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
+  const [petPhrase, setPetPhrase] = useState<string | null>(null);
   const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
   const [studentGlobalRank, setStudentGlobalRank] = useState<number | null>(null);
   const [equippedTheme, setEquippedTheme] = useState<string | null>(null);
@@ -70,6 +71,36 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const triggerPetReaction = (emoji: string) => {
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
+  };
+  const petPhrases = [
+    "Great job!",
+    "You can do it!",
+    "Let’s learn!",
+    "Keep going!",
+    "One more step!",
+    "Nice focus!",
+    "You are smart!",
+    "Try your best!",
+    "Awesome work!",
+    "Stay curious!",
+    "You are amazing!",
+    "Let’s win today!",
+    "Small steps, big win!",
+    "You got this!",
+    "High five!",
+    "Ready to learn?",
+    "Brave and bright!",
+    "Super effort!",
+    "Keep shining!",
+    "Let’s go!"
+  ];
+  const togglePetPhrase = () => {
+    if (petPhrase) {
+      setPetPhrase(null);
+      return;
+    }
+    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
+    setPetPhrase(next);
   };
   const themeColors = getThemeColors(equippedTheme);
   const pageBgClass = equippedTheme === "theme_forest"
@@ -586,7 +617,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                     <CardTitle className="text-2xl font-bold">
                       {assignment?.topicName || "Homework Quiz"}
                     </CardTitle>
-                    <CardDescription className="text-purple-100 text-sm mt-1">
+                    <CardDescription className="text-white/90 text-sm mt-1">
                       Answer all questions to complete
                     </CardDescription>
                   </div>
@@ -840,14 +871,21 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
         .animate-shake { animation: shake 0.5s ease-in-out; }
       `}</style>
       {quizPet && (
-        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
           <div className="relative">
             {petReaction && (
               <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
                 {petReaction}
               </div>
             )}
-            <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+            {petPhrase && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+                {petPhrase}
+              </div>
+            )}
+            <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
+              <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+            </button>
           </div>
         </div>
       )}
