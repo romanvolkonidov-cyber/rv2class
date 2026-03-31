@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Trophy, Star, Zap, Target, Medal, Crown } from "lucide-react";
-import { GameProfile, getLevelForXP, getXPProgress, getLeagueForLevel } from "@/lib/gamification";
+import { GameProfile, getLevelForXP, getThemeColors, getXPProgress, getLeagueForLevel } from "@/lib/gamification";
 import { getGameProfile } from "@/lib/gamification";
 import PetAvatar from "./PetAvatar";
 import BadgeDisplay from "./BadgeDisplay";
@@ -46,6 +46,7 @@ export default function StudentProfileModal({
   const level = profile ? getLevelForXP(profile.xp) : null;
   const progress = profile ? getXPProgress(profile.xp) : null;
   const league = level ? getLeagueForLevel(level.level) : null;
+  const themeColors = getThemeColors(profile?.equippedTheme || null);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -58,7 +59,7 @@ export default function StudentProfileModal({
       {/* Modal */}
       <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         {/* Header / Banner */}
-        <div className={`h-32 bg-gradient-to-r ${profile?.equippedTheme ? "from-indigo-500 to-purple-600" : "from-blue-500 to-indigo-600"} relative`}>
+        <div className={`h-32 bg-gradient-to-r ${themeColors.gradient} relative`}>
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors z-10"

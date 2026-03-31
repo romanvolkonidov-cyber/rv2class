@@ -634,11 +634,7 @@ export function getTreeStage(health: number): {
 
 // ─── Theme Colors ───────────────────────────────────────────────────
 
-export function getThemeColors(themeId: string | null): {
-  gradient: string;
-  accent: string;
-  bg: string;
-} {
+export function getThemeColors(themeId: string | null): { gradient: string; accent: string; bg: string } {
   switch (themeId) {
     case "theme_blue":
       return { gradient: "from-blue-500 to-cyan-500", accent: "text-blue-500", bg: "bg-blue-50" };
@@ -658,6 +654,65 @@ export function getThemeColors(themeId: string | null): {
       return { gradient: "from-sky-400 to-indigo-500", accent: "text-sky-500", bg: "bg-sky-50" };
     default:
       return { gradient: "from-blue-500 to-indigo-600", accent: "text-blue-500", bg: "bg-blue-50" };
+  }
+}
+
+export function getThemeVisualConfig(themeId: string | null): {
+  primary: string;
+  secondary: string;
+  surfaceGradient: string;
+  buttonGradient: string;
+  buttonHoverGradient: string;
+} {
+  switch (themeId) {
+    case "theme_blue":
+      return {
+        primary: "#3b82f6",
+        secondary: "#06b6d4",
+        surfaceGradient: "linear-gradient(to bottom right, #eff6ff, #dbeafe, #e0f2fe)",
+        buttonGradient: "linear-gradient(to right, #3b82f6, #2563eb)",
+        buttonHoverGradient: "linear-gradient(to right, #2563eb, #1d4ed8)",
+      };
+    case "theme_forest":
+      return {
+        primary: "#16a34a",
+        secondary: "#10b981",
+        surfaceGradient: "linear-gradient(to bottom right, #f0fdf4, #dcfce7, #d1fae5)",
+        buttonGradient: "linear-gradient(to right, #16a34a, #059669)",
+        buttonHoverGradient: "linear-gradient(to right, #15803d, #047857)",
+      };
+    case "theme_cyber":
+      return {
+        primary: "#d946ef",
+        secondary: "#06b6d4",
+        surfaceGradient: "linear-gradient(to bottom right, #fdf4ff, #fae8ff, #ecfeff)",
+        buttonGradient: "linear-gradient(to right, #c026d3, #06b6d4)",
+        buttonHoverGradient: "linear-gradient(to right, #a21caf, #0891b2)",
+      };
+    case "theme_gold":
+      return {
+        primary: "#d97706",
+        secondary: "#eab308",
+        surfaceGradient: "linear-gradient(to bottom right, #fffbeb, #fef3c7, #fef9c3)",
+        buttonGradient: "linear-gradient(to right, #d97706, #ca8a04)",
+        buttonHoverGradient: "linear-gradient(to right, #b45309, #a16207)",
+      };
+    case "theme_diamond":
+      return {
+        primary: "#0ea5e9",
+        secondary: "#6366f1",
+        surfaceGradient: "linear-gradient(to bottom right, #f0f9ff, #e0f2fe, #e0e7ff)",
+        buttonGradient: "linear-gradient(to right, #0ea5e9, #4f46e5)",
+        buttonHoverGradient: "linear-gradient(to right, #0284c7, #4338ca)",
+      };
+    default:
+      return {
+        primary: "#6366f1",
+        secondary: "#3b82f6",
+        surfaceGradient: "linear-gradient(to bottom right, #f8fafc, #dbeafe, #e0e7ff)",
+        buttonGradient: "linear-gradient(to right, #6366f1, #4f46e5)",
+        buttonHoverGradient: "linear-gradient(to right, #4f46e5, #4338ca)",
+      };
   }
 }
 

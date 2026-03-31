@@ -29,7 +29,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { BookOpen, Loader2, Trophy, X, Check, Star, TrendingUp, XCircle, Zap, Coins } from "lucide-react";
-import { getGameProfile, getLevelForXP, getXPProgress, GameProfile } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, GameProfile } from "@/lib/gamification";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
 import PetAvatar from "@/components/PetAvatar";
@@ -320,6 +320,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   }).length;
 
   const totalCount = assignments.length;
+  const themeVisual = getThemeVisualConfig(gameProfile?.equippedTheme || null);
 
   return (
     <ThemeProvider theme={lightTheme}>
@@ -328,7 +329,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         sx={{ 
           p: 3, 
           minHeight: '100vh', 
-          background: 'linear-gradient(to bottom right, #f8fafc, #dbeafe, #e0e7ff)',
+          background: themeVisual.surfaceGradient,
           position: 'relative',
           overflow: 'hidden'
         }}
@@ -341,7 +342,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             left: '25%', 
             width: '500px', 
             height: '500px', 
-            bgcolor: 'rgba(96, 165, 250, 0.1)', 
+            bgcolor: `${themeVisual.primary}1A`, 
             borderRadius: '50%', 
             filter: 'blur(80px)',
             animation: 'pulse 3s ease-in-out infinite'
@@ -352,7 +353,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             right: '25%', 
             width: '500px', 
             height: '500px', 
-            bgcolor: 'rgba(34, 211, 238, 0.1)', 
+            bgcolor: `${themeVisual.secondary}1A`, 
             borderRadius: '50%', 
             filter: 'blur(80px)',
             animation: 'pulse 3s ease-in-out infinite',
@@ -364,7 +365,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             left: '50%', 
             width: '400px', 
             height: '400px', 
-            bgcolor: 'rgba(129, 140, 248, 0.1)', 
+            bgcolor: `${themeVisual.primary}1A`, 
             borderRadius: '50%', 
             filter: 'blur(80px)',
             animation: 'pulse 3s ease-in-out infinite',
@@ -409,7 +410,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                       icon={<Zap size={14} />}
                       label={`${level.emoji} Lv.${level.level} • ${gameProfile.xp} XP`}
                       sx={{
-                        bgcolor: '#6366f1',
+                        bgcolor: themeVisual.primary,
                         color: 'white',
                         fontWeight: 700,
                         '& .MuiChip-icon': { color: 'white' }
@@ -438,9 +439,9 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                   startIcon={<Trophy size={18} />}
                   onClick={handleShowRatingDetails}
                   sx={{
-                    background: 'linear-gradient(to right, #f59e0b, #d97706)',
+                    background: themeVisual.buttonGradient,
                     '&:hover': {
-                      background: 'linear-gradient(to right, #d97706, #b45309)',
+                      background: themeVisual.buttonHoverGradient,
                     },
                     fontWeight: 700,
                     px: 2,
@@ -601,7 +602,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 sm:p-6 text-white">
+            <div className="p-4 sm:p-6 text-white" style={{ background: themeVisual.buttonGradient }}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   <Trophy className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
@@ -631,7 +632,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               {loadingResults ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <Loader2 className="h-8 w-8 animate-spin" style={{ color: themeVisual.primary }} />
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -886,7 +887,8 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             <div className="border-t p-4 bg-gray-50">
               <Button
                 onClick={() => setViewingResultsFor(null)}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                  className="w-full text-white"
+                  style={{ background: themeVisual.buttonGradient }}
               >
                 Close
               </Button>

@@ -6,7 +6,7 @@ import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHo
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2, Film, Image as ImageIcon, Clock, Zap, Star, Coins } from "lucide-react";
-import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
+import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getThemeColors, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import confetti from "canvas-confetti";
 import PetAvatar from "@/components/PetAvatar";
@@ -40,6 +40,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
   const [studentGlobalRank, setStudentGlobalRank] = useState<number | null>(null);
+  const [equippedTheme, setEquippedTheme] = useState<string | null>(null);
 
   // Timer
   useEffect(() => {
@@ -70,6 +71,22 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
   };
+  const themeColors = getThemeColors(equippedTheme);
+  const pageBgClass = equippedTheme === "theme_forest"
+    ? "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100"
+    : equippedTheme === "theme_sunset"
+    ? "bg-gradient-to-br from-orange-50 via-rose-50 to-amber-100"
+    : equippedTheme === "theme_ocean"
+    ? "bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-100"
+    : equippedTheme === "theme_purple"
+    ? "bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100"
+    : equippedTheme === "theme_cyber"
+    ? "bg-gradient-to-br from-fuchsia-50 via-cyan-50 to-indigo-100"
+    : equippedTheme === "theme_gold"
+    ? "bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100"
+    : equippedTheme === "theme_diamond"
+    ? "bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100"
+    : "bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100";
 
   const formatOrdinal = (rank: number) => {
     if (rank % 100 >= 11 && rank % 100 <= 13) return `${rank}th`;
@@ -138,6 +155,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
       // Load partial progress
       try {
         const profile = await getGameProfile(studentId);
+        setEquippedTheme(profile.equippedTheme || null);
         if (profile.petId) {
           setQuizPet({ petId: profile.petId, accessories: profile.petAccessories || [] });
         }
@@ -313,7 +331,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   // ─── Loading ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 flex items-center justify-center p-4">
+      <main className={`min-h-screen ${pageBgClass} flex items-center justify-center p-4`}>
         <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
       </main>
     );
@@ -337,11 +355,11 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
       : null;
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 p-4">
+      <main className={`min-h-screen ${pageBgClass} p-4`}>
         <div className="max-w-2xl mx-auto mt-8 space-y-6">
           {/* Score Card */}
           <Card className="backdrop-blur-sm bg-white/90 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center pb-8">
+            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white text-center pb-8`}>
               <CheckCircle className="h-16 w-16 mx-auto mb-3" />
               <CardTitle className="text-3xl font-bold">Homework Complete!</CardTitle>
               <CardDescription className="text-green-100 text-lg mt-1">
@@ -521,7 +539,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
 
                 <Button
                   onClick={() => router.push(`/student/${studentId}/homework`)}
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold px-8 py-6 text-lg"
+                  className={`bg-gradient-to-r ${themeColors.gradient} text-white font-semibold px-8 py-6 text-lg`}
                 >
                   <ArrowLeft className="mr-2 h-5 w-5" />
                   Back to Homework List
@@ -552,7 +570,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const isCurrentAnswered = !!currentAnswer;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 p-4">
+    <main className={`min-h-screen ${pageBgClass} p-4`}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 mt-8">
           <Button variant="outline" onClick={() => router.back()} className="mb-4">
@@ -560,7 +578,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
           </Button>
 
           <Card className="backdrop-blur-sm bg-white/90 shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-t-lg">
+            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white rounded-t-lg`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <BookOpen className="h-8 w-8" />
@@ -597,7 +615,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                    className={`bg-gradient-to-r ${themeColors.gradient} h-2.5 rounded-full transition-all duration-500`}
                   style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
                 />
               </div>
@@ -789,7 +807,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                   <Button
                     onClick={handleNext}
                     disabled={!isCurrentAnswered}
-                    className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`bg-gradient-to-r ${themeColors.gradient} text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     Next <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
                   </Button>
