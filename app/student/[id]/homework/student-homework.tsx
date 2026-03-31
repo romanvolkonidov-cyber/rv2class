@@ -408,7 +408,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         {/* Back Button */}
         <MuiButton
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.back()}
+          onClick={() => router.push(`/student/${studentId}`)}
           sx={{ mb: 3, color: 'text.secondary' }}
         >
           Back to Welcome Page
@@ -419,11 +419,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             {/* Header Section */}
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }} flexWrap="wrap" gap={2}>
               <Stack>
-                <Typography variant="h5" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <BookOpen size={28} />
-                  {studentName}'s Homework
+                  {studentName}&apos;s Homework
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                   Track your assignments and progress
                 </Typography>
               </Stack>

@@ -191,17 +191,17 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
       <div className="max-w-2xl w-full space-y-4 relative z-10">
         {/* Welcome Card */}
-        <div className="glass-panel rounded-3xl overflow-hidden">
-          <div className={`bg-gradient-to-r ${activeGradient} p-6 sm:p-8`}>
+        <div className="glass-panel rounded-3xl overflow-hidden shadow-2xl">
+          <div className={`bg-gradient-to-r ${activeGradient} p-6 sm:p-8 text-white`}>
             <div className="flex items-center gap-4">
               <div className="glass-surface-dark p-3 rounded-2xl">
                 <UserCircle className="h-10 w-10 text-white" />
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow-md">
                   Добро пожаловать, {student.name}! 👋
                 </h1>
-                <p className="text-white/90 text-sm sm:text-base mt-1">
+                <p className="text-white/95 font-medium text-sm sm:text-base mt-1 drop-shadow-sm">
                   Твоё личное учебное пространство
                 </p>
               </div>
@@ -209,7 +209,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
             {/* XP Bar in header */}
             {level && progress && (
-              <div className="mt-4 bg-white/15 rounded-xl p-3 backdrop-blur-sm">
+              <div className="mt-4 bg-black/20 rounded-xl p-3 backdrop-blur-md border border-white/10 shadow-inner">
                 <div className="flex items-center justify-between text-white text-sm mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{level.emoji}</span>
@@ -221,16 +221,16 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                     <span className="flex items-center gap-1 text-xs" title="Shop Coins"><Coins className="h-3 w-3 text-yellow-300" />{gameProfile?.shopCoins}</span>
                   </div>
                 </div>
-                <div className="w-full bg-white/20 rounded-full h-2">
+                <div className="w-full bg-black/40 rounded-full h-2 shadow-inner">
                   <div
-                    className="bg-gradient-to-r from-yellow-300 to-amber-400 h-2 rounded-full transition-all duration-700"
+                    className="bg-gradient-to-r from-yellow-300 to-amber-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(252,211,77,0.8)]"
                     style={{ width: `${progress.percent}%` }}
                   />
                 </div>
                 {progress.needed > 0 && (
-                  <div className="text-white/60 text-[10px] mt-1 text-right">{progress.current}/{progress.needed} to Lv.{level.level + 1}</div>
+                  <div className="text-white/90 font-medium text-[10px] mt-1 text-right">{progress.current}/{progress.needed} to Lv.{level.level + 1}</div>
                 )}
-                <div className="mt-2 text-[10px] text-white/80">
+                <div className="mt-2 text-[10px] text-white/90 font-medium">
                   Недельная серия: если каждую неделю делать хотя бы 1 ДЗ, серия растёт 🔥
                 </div>
               </div>

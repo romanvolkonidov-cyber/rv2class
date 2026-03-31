@@ -639,21 +639,21 @@ export function getThemeColors(themeId: string | null): { gradient: string; acce
     case "theme_blue":
       return { gradient: "from-blue-500 to-cyan-500", accent: "text-blue-500", bg: "bg-blue-50" };
     case "theme_purple":
-      return { gradient: "from-purple-500 to-violet-600", accent: "text-purple-500", bg: "bg-purple-50" };
+      return { gradient: "from-purple-600 to-indigo-700", accent: "text-purple-600", bg: "bg-purple-50" };
     case "theme_sunset":
-      return { gradient: "from-orange-400 to-rose-500", accent: "text-orange-500", bg: "bg-orange-50" };
+      return { gradient: "from-orange-500 to-rose-600", accent: "text-orange-600", bg: "bg-orange-50" };
     case "theme_ocean":
-      return { gradient: "from-teal-500 to-blue-600", accent: "text-teal-500", bg: "bg-teal-50" };
+      return { gradient: "from-teal-600 to-blue-700", accent: "text-teal-600", bg: "bg-teal-50" };
     case "theme_forest":
-      return { gradient: "from-green-500 to-emerald-600", accent: "text-green-500", bg: "bg-green-50" };
+      return { gradient: "from-green-600 to-emerald-700", accent: "text-green-600", bg: "bg-green-50" };
     case "theme_cyber":
-      return { gradient: "from-fuchsia-600 to-cyan-500", accent: "text-fuchsia-500", bg: "bg-fuchsia-50" };
+      return { gradient: "from-fuchsia-700 to-cyan-600", accent: "text-fuchsia-600", bg: "bg-fuchsia-50" };
     case "theme_gold":
-      return { gradient: "from-amber-400 to-yellow-500", accent: "text-amber-500", bg: "bg-amber-50" };
+      return { gradient: "from-amber-500 to-yellow-600", accent: "text-amber-600", bg: "bg-amber-50" };
     case "theme_diamond":
-      return { gradient: "from-sky-400 to-indigo-500", accent: "text-sky-500", bg: "bg-sky-50" };
+      return { gradient: "from-sky-500 to-indigo-600", accent: "text-sky-600", bg: "bg-sky-50" };
     default:
-      return { gradient: "from-blue-500 to-indigo-600", accent: "text-blue-500", bg: "bg-blue-50" };
+      return { gradient: "from-blue-600 to-indigo-700", accent: "text-blue-600", bg: "bg-blue-50" };
   }
 }
 

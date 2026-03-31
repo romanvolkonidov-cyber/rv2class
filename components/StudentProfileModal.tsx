@@ -59,7 +59,7 @@ export default function StudentProfileModal({
       {/* Modal */}
       <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         {/* Header / Banner */}
-        <div className={`h-32 bg-gradient-to-r ${themeColors.gradient} relative`}>
+        <div className={`h-32 bg-gradient-to-r ${profile?.equippedTheme ? getThemeColors(profile.equippedTheme).gradient : "from-blue-600 to-indigo-700"} relative shadow-inner`}>
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors z-10"

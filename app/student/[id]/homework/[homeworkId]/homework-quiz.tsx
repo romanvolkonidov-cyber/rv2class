@@ -604,26 +604,26 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     <main className={`min-h-screen ${pageBgClass} p-4`}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 mt-8">
-          <Button variant="outline" onClick={() => router.back()} className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <Button variant="outline" onClick={() => router.push(`/student/${studentId}/homework`)} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Homework List
           </Button>
 
           <Card className="backdrop-blur-sm bg-white/90 shadow-xl">
-            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white rounded-t-lg`}>
+            <CardHeader className={`bg-gradient-to-r ${themeColors.gradient} text-white rounded-t-lg shadow-inner`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <BookOpen className="h-8 w-8" />
+                  <BookOpen className="h-8 w-8 drop-shadow-md" />
                   <div>
-                    <CardTitle className="text-2xl font-bold">
+                    <CardTitle className="text-2xl font-bold drop-shadow-md">
                       {assignment?.topicName || "Homework Quiz"}
                     </CardTitle>
-                    <CardDescription className="text-white/90 text-sm mt-1">
+                    <CardDescription className="text-white font-medium mt-1 drop-shadow-md">
                       Answer all questions to complete
                     </CardDescription>
                   </div>
                 </div>
                 {/* Timer */}
-                <div className="flex items-center gap-2 bg-white/20 rounded-full px-3 py-1.5">
+                <div className="flex items-center gap-2 bg-black/20 text-white rounded-full px-3 py-1.5 shadow-inner">
                   <Clock className="h-4 w-4" />
                   <span className="font-mono font-bold text-sm">{formatTime(elapsedSeconds)}</span>
                 </div>
