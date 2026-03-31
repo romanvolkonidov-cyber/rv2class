@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ShopReward, SHOP_REWARDS, purchaseReward, equipReward, GameProfile } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 import { X, ShoppingBag, Check, Coins } from "lucide-react";
+import PetAvatar from "./PetAvatar";
 
 interface RewardShopProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface RewardShopProps {
 export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }: RewardShopProps) {
   const [buying, setBuying] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [previewRewardId, setPreviewRewardId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -90,6 +92,16 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
     face: "Лицо",
     neck: "Шея",
   };
+  const previewReward = previewRewardId ? SHOP_REWARDS.find(r => r.id === previewRewardId) || null : null;
+  const previewPetId = profile.petId || "pet_fox";
+  const previewAccessories = (() => {
+    const current = [...(profile.petAccessories || [])];
+    if (!previewReward || previewReward.type !== "accessory" || !previewReward.slot) return current;
+    const sameSlot = SHOP_REWARDS
+      .filter(r => r.type === "accessory" && r.slot === previewReward.slot && r.id !== previewReward.id)
+      .map(r => r.id);
+    return [...current.filter(id => !sameSlot.includes(id)), previewReward.id];
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -129,6 +141,23 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
 
         {/* Content */}
         <div className="overflow-y-auto p-4 max-h-[65vh] space-y-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <PetAvatar petId={previewPetId} accessories={previewAccessories} size="md" />
+              <div className="text-center sm:text-left">
+                <div className="text-sm font-bold text-gray-800">Примерка питомца</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Наведи на предмет, чтобы увидеть, как он будет выглядеть.
+                </div>
+                {previewReward && (
+                  <div className="mt-2 text-xs font-semibold text-amber-700">
+                    Предпросмотр: {previewReward.emoji} {previewReward.name}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {Object.entries(groupedRewards).map(([type, rewards]) => (
             <div key={type}>
               <h3 className="text-lg font-bold text-gray-800 mb-3">{typeLabels[type]}</h3>
@@ -148,6 +177,11 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
                   return (
                     <div
                       key={reward.id}
+                      tabIndex={0}
+                      onMouseEnter={() => setPreviewRewardId(reward.id)}
+                      onFocus={() => setPreviewRewardId(reward.id)}
+                      onMouseLeave={() => setPreviewRewardId(null)}
+                      onBlur={() => setPreviewRewardId(null)}
                       className={`rounded-xl border-2 p-3 transition-all ${
                         isEquipped
                           ? "border-amber-400 bg-amber-50 shadow-md"

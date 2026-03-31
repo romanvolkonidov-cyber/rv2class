@@ -72,14 +72,12 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
       const hw = assignments.find(a => a.id === homeworkId);
 
       if (!hw) {
-        alert("Homework not found!");
-        router.back();
+        router.replace(`/student/${studentId}/homework`);
         return;
       }
 
       if (hw.status === "completed") {
-        alert("This homework has already been completed!");
-        router.back();
+        router.replace(`/student/${studentId}/homework`);
         return;
       }
 
@@ -283,6 +281,15 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
     const xp = awardResult?.xpBreakdown;
     const level = awardResult ? getLevelForXP(awardResult.updatedProfile.xp) : null;
     const progress = awardResult ? getXPProgress(awardResult.updatedProfile.xp) : null;
+    const streakSummary = awardResult
+      ? awardResult.streakOutcome === "kept"
+        ? "Серия продолжена"
+        : awardResult.streakOutcome === "same_week"
+        ? "Эта неделя уже учтена"
+        : awardResult.streakOutcome === "reset"
+        ? "Серия начата заново"
+        : "Первая неделя серии"
+      : null;
 
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 p-4">
@@ -354,6 +361,31 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                         <span className="text-gray-600">🪙 Coins earned</span>
                         <span className="font-bold text-amber-600">+{xp.coinsEarned} coins</span>
                       </div>
+                      {awardResult && awardResult.comebackBonusCoins > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">🎁 Comeback bonus</span>
+                          <span className="font-bold text-emerald-600">+{awardResult.comebackBonusCoins} coins</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {awardResult && (
+                  <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-5 border-2 border-rose-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-gray-800">Недельная серия</div>
+                        <div className="text-xs text-gray-600 mt-1">{streakSummary}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-rose-600">{awardResult.updatedProfile.currentStreak}</div>
+                        <div className="text-[11px] text-gray-600">недель подряд</div>
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-gray-600 mt-2">
+                      Рекорд: {awardResult.updatedProfile.highestStreak} недель
+                      {awardResult.missedWeeks > 0 && ` • Пропущено недель: ${awardResult.missedWeeks}`}
                     </div>
                   </div>
                 )}

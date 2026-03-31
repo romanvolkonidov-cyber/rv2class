@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { countUncompletedHomework } from "@/lib/firebase";
-import { getGameProfile, getLevelForXP, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getNextBadgeHint, getNextLevel, getNextShopUnlock, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
@@ -128,6 +128,12 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
 
   const level = gameProfile ? getLevelForXP(gameProfile.xp) : null;
   const progress = gameProfile ? getXPProgress(gameProfile.xp) : null;
+  const nextLevel = level ? getNextLevel(level.level) : null;
+  const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
+  const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
+  const isFirstTimeStudent = gameProfile
+    ? gameProfile.totalHomeworksCompleted === 0 && gameProfile.purchasedRewards.length === 0 && gameProfile.unlockedBadges.length === 0
+    : false;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -179,6 +185,9 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 {progress.needed > 0 && (
                   <div className="text-white/60 text-[10px] mt-1 text-right">{progress.current}/{progress.needed} to Lv.{level.level + 1}</div>
                 )}
+                <div className="mt-2 text-[10px] text-white/80">
+                  Недельная серия: если каждую неделю делать хотя бы 1 ДЗ, серия растёт 🔥
+                </div>
               </div>
             )}
           </div>
@@ -218,11 +227,50 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 {gameProfile && gameProfile.unlockedBadges.length > 0 && (
                   <div className="flex items-center gap-2 pt-1">
                     <span className="text-xs text-gray-500 font-medium">Badges:</span>
-                    <BadgeDisplay unlockedBadges={gameProfile.unlockedBadges} compact />
+                    <BadgeDisplay
+                      unlockedBadges={gameProfile.unlockedBadges}
+                      purchasedRewards={gameProfile.purchasedRewards}
+                      compact
+                    />
                   </div>
                 )}
               </div>
             </div>
+
+            {gameProfile && nextShopUnlock && (
+              <div className="glass-surface rounded-2xl p-4 sm:p-5">
+                <div className="text-sm font-bold text-gray-800 mb-2">Следующая цель</div>
+                <div className="space-y-1 text-sm text-gray-700">
+                  {nextLevel ? (
+                    <div>До следующего уровня {nextLevel.emoji} осталось: <span className="font-bold">{Math.max(0, nextLevel.xpRequired - gameProfile.xp)} XP</span></div>
+                  ) : (
+                    <div>Максимальный уровень уже достигнут 🏆</div>
+                  )}
+                  {nextShopUnlock.reward ? (
+                    <div>
+                      До награды {nextShopUnlock.reward.emoji} <span className="font-semibold">{nextShopUnlock.reward.name}</span>:
+                      <span className="font-bold"> {nextShopUnlock.coinsNeeded} монет</span>
+                    </div>
+                  ) : (
+                    <div>Все награды магазина уже куплены 🎉</div>
+                  )}
+                  {nextBadgeHint && (
+                    <div className="text-xs text-gray-600 mt-2">
+                      Ближайший бейдж: <span className="font-semibold">{nextBadgeHint.emoji} {nextBadgeHint.name}</span> — {nextBadgeHint.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {isFirstTimeStudent && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                <div className="font-bold mb-1">Как работает игровой прогресс</div>
+                <div>1) Делай ДЗ → получаешь XP и монеты</div>
+                <div>2) В магазине покупай аксессуары и награды</div>
+                <div>3) Открывай бейджи за достижения в заданиях</div>
+              </div>
+            )}
 
             {/* Homework Button - Enhanced */}
             <div>

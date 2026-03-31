@@ -175,7 +175,7 @@ export default function StudentProfileModal({
                   <span className="font-bold text-slate-700">Badges Unlocked</span>
                 </div>
                 <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100 overflow-y-auto max-h-[250px]">
-                  <BadgeDisplay unlockedBadges={profile.unlockedBadges} />
+                  <BadgeDisplay unlockedBadges={profile.unlockedBadges} purchasedRewards={profile.purchasedRewards} />
                 </div>
               </div>
             </div>

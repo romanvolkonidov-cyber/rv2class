@@ -372,7 +372,25 @@ export interface AwardResult {
   previousLevel: LevelInfo;
   leveledUp: boolean;
   newBadges: Badge[];
+  comebackBonusCoins: number;
+  streakOutcome: "started" | "kept" | "same_week" | "reset";
+  missedWeeks: number;
   updatedProfile: GameProfile;
+}
+
+export function getNextShopUnlock(profile: Pick<GameProfile, "shopCoins" | "purchasedRewards">): { reward: ShopReward | null; coinsNeeded: number } {
+  const nextReward = SHOP_REWARDS
+    .filter(r => !profile.purchasedRewards.includes(r.id))
+    .sort((a, b) => a.cost - b.cost)[0] || null;
+  if (!nextReward) return { reward: null, coinsNeeded: 0 };
+  return {
+    reward: nextReward,
+    coinsNeeded: Math.max(0, nextReward.cost - profile.shopCoins),
+  };
+}
+
+export function getNextBadgeHint(profile: Pick<GameProfile, "unlockedBadges">): Badge | null {
+  return BADGES.find(b => !profile.unlockedBadges.includes(b.id)) || null;
 }
 
 /**
@@ -408,22 +426,33 @@ export async function awardHomeworkXP(
 
   // Streak Logic calculation
   const currentWeekStr = getYearWeekString(new Date());
+  let streakOutcome: AwardResult["streakOutcome"] = "started";
+  let missedWeeks = 0;
+  let comebackBonusCoins = 0;
   if (profile.lastHomeworkWeek) {
     const last = parseYearWeek(profile.lastHomeworkWeek);
     const curr = parseYearWeek(currentWeekStr);
+    const estimatedGapWeeks = Math.max(0, (curr.year - last.year) * 52 + (curr.week - last.week));
     
     // Check if it's the exact next week
     if ((curr.year === last.year && curr.week === last.week + 1) || 
         (curr.year === last.year + 1 && curr.week === 1 && last.week >= 52)) {
       profile.currentStreak += 1; // Kept the streak
+      streakOutcome = "kept";
     } else if (curr.year === last.year && curr.week === last.week) {
       // Same week, do nothing to streak count
+      streakOutcome = "same_week";
     } else {
       // Missed a week
+      missedWeeks = Math.max(1, estimatedGapWeeks - 1);
+      comebackBonusCoins = Math.min(30, missedWeeks * 4);
       profile.currentStreak = 1;
+      profile.shopCoins += comebackBonusCoins;
+      streakOutcome = "reset";
     }
   } else {
     profile.currentStreak = 1; // First ever
+    streakOutcome = "started";
   }
   profile.lastHomeworkWeek = currentWeekStr;
   
@@ -470,6 +499,9 @@ export async function awardHomeworkXP(
     previousLevel,
     leveledUp,
     newBadges,
+    comebackBonusCoins,
+    streakOutcome,
+    missedWeeks,
     updatedProfile: profile,
   };
 }
