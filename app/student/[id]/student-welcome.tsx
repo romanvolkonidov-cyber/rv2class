@@ -174,7 +174,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const nextLevel = level ? getNextLevel(level.level) : null;
   const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
   const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
-  const themeColors = gameProfile ? getThemeColors(gameProfile.equippedTheme) : null;
+  const themeColors = gameProfile && gameProfile.equippedTheme ? getThemeColors(gameProfile.equippedTheme) : null;
   const activeGradient = themeColors?.gradient || colors.gradient;
   const isFirstTimeStudent = gameProfile
     ? gameProfile.totalHomeworksCompleted === 0 && gameProfile.purchasedRewards.length === 0 && gameProfile.unlockedBadges.length === 0
