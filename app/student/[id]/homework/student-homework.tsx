@@ -24,6 +24,7 @@ import {
   ListItemText,
   Divider,
   Badge,
+  Tooltip,
 } from "@mui/material";
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -421,234 +422,131 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
           Вернуться на главную
         </MuiButton>
 
-        {/* Multipliers Dashboard */}
+        {/* Gamification Dashboard - Top Section */}
         {gameProfile && level && progress && (
-          <MuiCard sx={{ 
-            maxWidth: 980, 
-            mx: 'auto', 
-            mb: 4, 
-            p: 0, 
-            borderRadius: 4,
-            overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            background: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
-          }}>
-            <Box sx={{ 
-              p: 2, 
-              background: 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)', 
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 900, display: 'flex', alignItems: 'center', gap: 1 }}>
-                🚀 КОМБО-МНОЖИТЕЛИ МОНЕТ
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700 }}>
-                Множители складываются! Максимум 2.34x
-              </Typography>
-            </Box>
-            
-            {(() => {
-              const isOverdue = assignments.some(a => {
-                if (a.status === 'completed') return false;
-                const assignedTime = a.assignedAt?.seconds ? a.assignedAt.seconds * 1000 : new Date(a.assignedAt).getTime();
-                return (Date.now() - assignedTime) > (7 * 24 * 60 * 60 * 1000);
-              });
-
-              return (
-                <Stack direction={{ xs: 'column', sm: 'row' }} divider={<Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />} sx={{ p: 2 }}>
-                  {/* Streak Multiplier */}
-                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                      <Flame size={18} color={gameProfile.currentStreak >= 3 ? "#f59e0b" : "#94a3b8"} />
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: gameProfile.currentStreak >= 3 ? '#b45309' : '#64748b' }}>
-                        Серия 1.2x
-                      </Typography>
-                    </Box>
-                    <Chip 
-                      label={gameProfile.currentStreak >= 3 ? "АКТИВНО" : `${gameProfile.currentStreak}/3 нед.`} 
-                      size="small"
-                      variant={gameProfile.currentStreak >= 3 ? "filled" : "outlined"}
-                      sx={{ 
-                        height: 18, 
-                        fontSize: '0.65rem', 
-                        fontWeight: 900,
-                        bgcolor: gameProfile.currentStreak >= 3 ? '#f59e0b' : 'transparent',
-                        color: gameProfile.currentStreak >= 3 ? 'white' : '#64748b'
-                      }}
-                    />
-                  </Box>
-
-                  {/* Punctuality Multiplier */}
-                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                      <Zap size={18} color={!isOverdue ? "#10b981" : "#94a3b8"} />
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: !isOverdue ? '#065f46' : '#64748b' }}>
-                        Скорость 1.3x
-                      </Typography>
-                    </Box>
-                    <Chip 
-                      label={!isOverdue ? "АКТИВНО" : "ЕСТЬ ДОЛГИ"} 
-                      size="small"
-                      variant={!isOverdue ? "filled" : "outlined"}
-                      sx={{ 
-                        height: 18, 
-                        fontSize: '0.65rem', 
-                        fontWeight: 900,
-                        bgcolor: !isOverdue ? '#10b981' : 'transparent',
-                        color: !isOverdue ? 'white' : '#64748b'
-                      }}
-                    />
-                  </Box>
-
-                  {/* Weekend Multiplier */}
-                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                      <Star size={18} color={[0, 6].includes(new Date().getDay()) ? "#ec4899" : "#94a3b8"} />
-                      <Typography variant="body2" sx={{ fontWeight: 800, color: [0, 6].includes(new Date().getDay()) ? '#9d174d' : '#64748b' }}>
-                        Выходной 1.5x
-                      </Typography>
-                    </Box>
-                    <Chip 
-                      label={[0, 6].includes(new Date().getDay()) ? "АКТИВНО" : "БУДНИ"} 
-                      size="small"
-                      variant={[0, 6].includes(new Date().getDay()) ? "filled" : "outlined"}
-                      sx={{ 
-                        height: 18, 
-                        fontSize: '0.65rem', 
-                        fontWeight: 900,
-                        bgcolor: [0, 6].includes(new Date().getDay()) ? '#ec4899' : 'transparent',
-                        color: [0, 6].includes(new Date().getDay()) ? 'white' : '#64748b'
-                      }}
-                    />
-                  </Box>
-                </Stack>
-              );
-            })()}
-            
-            <Box sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-              <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
-                💡 Делай уроки каждую неделю и не копи долги дольше 7 дней, чтобы получать максимум наград!
-              </Typography>
-            </Box>
-          </MuiCard>
-        )}
-
-        {/* Gamification Dashboard */}
-        {gameProfile && level && progress && (
-          <Box sx={{ maxWidth: 980, mx: 'auto', mb: 4 }}>
+          <Box sx={{ maxWidth: 980, mx: 'auto', mb: 2 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
               {/* XP & Level Card */}
-              <MuiCard sx={{ flex: 2, p: 3, background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+              <MuiCard sx={{ 
+                flex: 2, 
+                p: {xs: 2, sm: 3}, 
+                background: 'rgba(255, 255, 255, 0.85)', 
+                backdropFilter: 'blur(12px)', 
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+              }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                   <Stack direction="row" spacing={2} alignItems="center">
-                    <Typography variant="h3">{level.emoji}</Typography>
+                    <Typography variant="h3" sx={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}>{level.emoji}</Typography>
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 850, color: '#1e293b', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                         Lv.{level.level} {level.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>
                         Текущий ранг
                       </Typography>
                     </Box>
                   </Stack>
-                  <Stack direction="row" spacing={2}>
+                  <Stack direction="row" spacing={2.5}>
                     <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Flame size={20} /> {gameProfile.currentStreak}
+                      <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Flame size={20} fill="#f59e0b" /> {gameProfile.currentStreak}
                       </Typography>
-                      {gameProfile.currentStreak >= 3 && (
-                        <Chip 
-                          label="1.2x Boost!" 
-                          size="small" 
-                          sx={{ 
-                            height: 16, 
-                            fontSize: '0.6rem', 
-                            bgcolor: '#f59e0b', 
-                            color: 'white', 
-                            fontWeight: 900,
-                            mb: 0.5
-                          }} 
-                        />
-                      )}
-                      <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>Серия</Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Серия</Typography>
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Zap size={20} /> {gameProfile.xp}
+                      <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Zap size={20} fill="#3b82f6" /> {gameProfile.xp}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>Всего XP</Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Всего XP</Typography>
                     </Box>
                   </Stack>
                 </Box>
 
                 <Box sx={{ width: '100%', mb: 1 }}>
-                   <Box sx={{ position: 'relative', height: 10, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 5, overflow: 'hidden' }}>
+                   <Box sx={{ position: 'relative', height: 12, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 6, overflow: 'hidden' }}>
                      <Box 
                        sx={{ 
                          position: 'absolute', 
                          height: '100%', 
                          width: `${progress.percent}%`, 
                          background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
-                         borderRadius: 5,
+                         borderRadius: 6,
                          transition: 'width 1s ease-in-out',
-                         boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)'
+                         boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
                        }} 
                      />
                    </Box>
-                   <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.5, fontWeight: 700, color: '#64748b' }}>
-                     {progress.needed > 0 ? `${progress.current} / ${progress.needed} XP до Lv.${level.level + 1}` : 'Максимальный уровень!'}
+                   <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.75, fontWeight: 800, color: '#64748b' }}>
+                     {progress.needed > 0 ? `${progress.current} / ${progress.needed} XP до Lv.${level.level + 1}` : 'Максимальный уровень! 🎉'}
                    </Typography>
                 </Box>
               </MuiCard>
 
               {/* Next Goals Card */}
-              <MuiCard sx={{ flex: 1, p: 3, background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <MuiCard sx={{ 
+                flex: 1, 
+                p: {xs: 2, sm: 3}, 
+                background: 'rgba(255, 255, 255, 0.85)', 
+                backdropFilter: 'blur(12px)', 
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                borderRadius: 4,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+              }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 850, color: '#1e293b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   🎯 Следующая цель
                 </Typography>
-                <Stack spacing={1.5}>
+                <Stack spacing={1.25}>
                   {nextLevel && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box sx={{ color: '#3b82f6', display: 'flex' }}><Trophy size={16} /></Box>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.85rem', fontWeight: 600 }}>
                         До {nextLevel.emoji}: <strong>{nextLevel.xpRequired - gameProfile.xp} XP</strong>
                       </Typography>
                     </Box>
                   )}
                   {nextShopUnlock?.reward && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box sx={{ color: '#f59e0b', display: 'flex' }}><ShoppingBag size={16} /></Box>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.85rem', fontWeight: 600 }}>
                         Награда {nextShopUnlock.reward.emoji}: {nextShopUnlock.coinsNeeded > 0 ? <strong>{nextShopUnlock.coinsNeeded} монеты</strong> : <strong style={{color: '#059669'}}>доступно!</strong>}
                       </Typography>
                     </Box>
                   )}
                   {nextBadgeHint && (
-                    <Box sx={{ display: 'flex', alignItems: 'start', gap: 1 }}>
-                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem', lineHeight: 1.2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                      <Box sx={{ color: '#ec4899', display: 'flex', mt: 0.2 }}><Star size={16} /></Box>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.85rem', lineHeight: 1.3, fontWeight: 600 }}>
                         Бейдж {nextBadgeHint.emoji}: <em>{nextBadgeHint.description}</em>
                       </Typography>
                     </Box>
                   )}
-                    <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(245, 158, 11, 0.08)', borderRadius: 2, border: '1px dashed rgba(245, 158, 11, 0.4)' }}>
-                      <Typography variant="subtitle2" sx={{ color: '#b45309', fontWeight: 900, mb: 0.5, fontSize: '0.75rem', textTransform: 'uppercase' }}>
-                        💡 Как получить бонус?
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600, display: 'block', lineHeight: 1.3 }}>
-                        Выполняй задания каждую неделю без пропусков (не оставляй дз более чем на 7 дней). Через <strong>3 недели</strong> активируется <strong>1.2x множитель монет</strong> и будет действовать, пока ты не прервёшь серию!
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </MuiCard>
+                  <Box sx={{ mt: 1.5, p: 2, bgcolor: 'rgba(245, 158, 11, 0.08)', borderRadius: 2, border: '1px dashed rgba(245, 158, 11, 0.4)' }}>
+                    <Typography variant="subtitle2" sx={{ color: '#b45309', fontWeight: 900, mb: 0.5, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                      💡 Как получить бонус?
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600, display: 'block', lineHeight: 1.3 }}>
+                      Выполняй задания каждую неделю без пропусков (не оставляй дз более чем на 7 дней). Через <strong>3 недели</strong> активируется <strong>1.2x множитель монет</strong> и будет действовать, пока ты не прервёшь серию!
+                    </Typography>
+                  </Box>
+                </Stack>
+              </MuiCard>
             </Stack>
 
-            {/* Badges Row */}
+            {/* Badges Row - Integrated into stats section */}
             {gameProfile.unlockedBadges.length > 0 && (
-              <MuiCard sx={{ mt: 3, p: 2, background: 'rgba(255, 255, 255, 0.6)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+              <MuiCard sx={{ 
+                mt: 2, 
+                p: 1.5, 
+                px: 2.5,
+                background: 'rgba(255, 255, 255, 0.65)', 
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: 4,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+              }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Мои Награды:</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05rem', whiteSpace: 'nowrap' }}>Достижения:</Typography>
                   <BadgeDisplay 
                     unlockedBadges={gameProfile.unlockedBadges} 
                     purchasedRewards={gameProfile.purchasedRewards} 
@@ -657,6 +555,135 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                 </Stack>
               </MuiCard>
             )}
+          </Box>
+        )}
+
+        {/* Multipliers - Compact Indicator Row */}
+        {gameProfile && (
+          <Box sx={{ 
+            maxWidth: 980, 
+            mx: 'auto', 
+            mb: 4, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5,
+            flexWrap: 'wrap',
+            px: {xs: 1, sm: 0}
+          }}>
+            <Typography variant="caption" sx={{ fontWeight: 900, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', mr: 0.5 }}>
+              🚀 Комбо-бустеры:
+            </Typography>
+
+            {(() => {
+              const isOverdue = assignments.some(a => {
+                if (a.status === 'completed') return false;
+                const assignedTime = a.assignedAt?.seconds ? a.assignedAt.seconds * 1000 : new Date(a.assignedAt).getTime();
+                return (Date.now() - assignedTime) > (7 * 24 * 60 * 60 * 1000);
+              });
+
+              return (
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  {/* Streak Multiplier */}
+                  <Tooltip 
+                    title={gameProfile.currentStreak >= 3 ? "Серия зафиксирована! Множитель 1.2x активен." : "Нужна серия из 3 недель без пропусков (текущая: " + gameProfile.currentStreak + ")."}
+                    arrow
+                  >
+                    <Chip 
+                      icon={<Flame size={14} color="white" fill={gameProfile.currentStreak >= 3 ? "white" : "transparent"} />}
+                      label="1.2x Серия"
+                      size="small"
+                      sx={{ 
+                        fontWeight: 800, 
+                        bgcolor: gameProfile.currentStreak >= 3 ? '#f59e0b' : '#e2e8f0',
+                        color: gameProfile.currentStreak >= 3 ? 'white' : '#94a3b8',
+                        '& .MuiChip-icon': { color: 'inherit' },
+                        transition: 'all 0.3s ease'
+                      }}
+                    />
+                  </Tooltip>
+
+                  {/* Speed Multiplier */}
+                  <Tooltip 
+                    title={!isOverdue ? "Все уроки в срок! Множитель 1.3x за скорость активен." : "У тебя есть долги старше 7 дней. Закрой их, чтобы вернуть бонус."}
+                    arrow
+                  >
+                    <Chip 
+                      icon={<Zap size={14} color="white" fill={!isOverdue ? "white" : "transparent"} />}
+                      label="1.3x Скорость"
+                      size="small"
+                      sx={{ 
+                        fontWeight: 800, 
+                        bgcolor: !isOverdue ? '#10b981' : '#e2e8f0',
+                        color: !isOverdue ? 'white' : '#94a3b8',
+                        '& .MuiChip-icon': { color: 'inherit' },
+                        transition: 'all 0.3s ease'
+                      }}
+                    />
+                  </Tooltip>
+
+                  {/* Weekend Multiplier */}
+                  <Tooltip 
+                    title={[0, 6].includes(new Date().getDay()) ? "Бонус выходного дня 1.5x активен!" : "Выполняй задания в Сб или Вс, чтобы получить 1.5x монет."}
+                    arrow
+                  >
+                    <Chip 
+                      icon={<Star size={14} color="white" fill={[0, 6].includes(new Date().getDay()) ? "white" : "transparent"} />}
+                      label="1.5x Выходной"
+                      size="small"
+                      sx={{ 
+                        fontWeight: 800, 
+                        bgcolor: [0, 6].includes(new Date().getDay()) ? '#ec4899' : '#e2e8f0',
+                        color: [0, 6].includes(new Date().getDay()) ? 'white' : '#94a3b8',
+                        '& .MuiChip-icon': { color: 'inherit' },
+                        transition: 'all 0.3s ease'
+                      }}
+                    />
+                  </Tooltip>
+
+                  {/* How-to Tooltip */}
+                  <Tooltip 
+                    title={(
+                      <Box sx={{ p: 1.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1, color: '#fcd34d', display: 'flex', alignItems: 'center', gap: 1 }}>
+                          ❓ Как работают множители?
+                        </Typography>
+                        <Stack spacing={1}>
+                          <Typography variant="caption" sx={{ lineHeight: 1.4, display: 'block' }}>
+                            Все активные множители **умножаются**!
+                          </Typography>
+                          <Typography variant="caption" sx={{ lineHeight: 1.4, display: 'block', color: '#fbbf24' }}>
+                            Пример: 1.2x × 1.3x × 1.5x = **2.34x монет**.
+                          </Typography>
+                          <Typography variant="caption" sx={{ lineHeight: 1.4, display: 'block', fontStyle: 'italic', opacity: 0.8 }}>
+                            Просто не пропускай недели и делай уроки сразу!
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    )}
+                    arrow
+                  >
+                    <Box sx={{ 
+                      ml: 1,
+                      width: 22, 
+                      height: 22, 
+                      borderRadius: '50%', 
+                      border: '1.5px solid #cbd5e1', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: '#94a3b8',
+                      cursor: 'help',
+                      fontSize: '0.7rem',
+                      fontWeight: 900,
+                      '&:hover': { bgcolor: '#f1f5f9', color: '#64748b', borderColor: '#94a3b8' },
+                      transition: 'all 0.2s ease'
+                    }}>
+                      ?
+                    </Box>
+                  </Tooltip>
+                </Stack>
+              );
+            })()}
           </Box>
         )}
 
