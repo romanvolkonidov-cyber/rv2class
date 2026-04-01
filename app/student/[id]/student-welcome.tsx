@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { countUncompletedHomework } from "@/lib/firebase";
-import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel, getPetNeeds, PetNeeds } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
 import PetAvatar from "@/components/PetAvatar";
+import PetCarePopover from "@/components/PetCarePopover";
 
 interface StudentData {
   id: string;
@@ -40,6 +41,9 @@ const createFallbackProfile = (studentId: string): GameProfile => ({
   currentStreak: 0,
   highestStreak: 0,
   lastHomeworkWeek: null,
+  petLastCleaned: null,
+  petLastFed: null,
+  petLastPlayed: null,
 });
 
 export default function StudentWelcome({ student }: { student: StudentData }) {
@@ -50,6 +54,9 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [showShop, setShowShop] = useState(false);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
+  const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | null>(null);
+
+  const petNeeds: PetNeeds = gameProfile ? getPetNeeds(gameProfile) : { poopCount: 0, isHungry: false, isBored: false };
 
   const teacherName = student.teacher || "Roman";
 
@@ -403,7 +410,57 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               {gameProfile.petId && (
                 <div className="flex flex-col items-center">
                   <h3 className="text-sm font-bold text-gray-700 mb-3">Твой питомец</h3>
-                  <div className="relative animate-bounce" style={{ animationDuration: '3s' }}>
+                  <div className="relative" style={{ animationDuration: '3s' }}>
+                    {/* Pet Care Need Emojis */}
+                    {petNeeds.poopCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
+                        className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
+                        style={{ animationDuration: '2s' }}
+                        title="Убрать!"
+                      >
+                        {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
+                          <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
+                        ))}
+                      </button>
+                    )}
+                    {petNeeds.isHungry && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
+                        className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                        title="Покормить!"
+                      >
+                        <span className="animate-pulse">🍽️</span>
+                      </button>
+                    )}
+                    {petNeeds.isBored && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
+                        className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                        title="Поиграть!"
+                      >
+                        <span className="animate-pulse">😐</span>
+                      </button>
+                    )}
+
+                    {/* Care Popover */}
+                    {activeCareNeed && gameProfile && (
+                      <PetCarePopover
+                        needType={activeCareNeed}
+                        needs={petNeeds}
+                        profile={gameProfile}
+                        onProfileUpdate={(updated) => setGameProfile(updated)}
+                        onClose={() => setActiveCareNeed(null)}
+                        onHappyReaction={(emoji) => {
+                          setPetReaction(emoji);
+                          setTimeout(() => setPetReaction(null), 3000);
+                        }}
+                      />
+                    )}
+
                     {petReaction && (
                       <div className="absolute -top-9 right-1 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
                         {petReaction}
@@ -418,7 +475,12 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                       <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" />
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-3 font-medium">Покупай аксессуары в магазине!</p>
+                  <p className="text-xs text-gray-500 mt-3 font-medium">
+                    {petNeeds.poopCount > 0 || petNeeds.isHungry || petNeeds.isBored
+                      ? "Нажми на эмодзи, чтобы позаботиться!"
+                      : "Покупай аксессуары в магазине!"
+                    }
+                  </p>
                 </div>
               )}
 

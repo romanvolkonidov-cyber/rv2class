@@ -317,6 +317,11 @@ export interface GameProfile {
   highestStreak: number;
   lastHomeworkWeek: string | null; // e.g. "2023-W42"
   
+  // Phase 5: Tamagotchi pet care
+  petLastCleaned: string | null;
+  petLastFed: string | null;
+  petLastPlayed: string | null;
+
   // Progress tracker to prevent re-answering
   progress?: Record<string, {
     answers: Record<string, { isCorrect: boolean; answer: string }>; // questionId -> answer info
@@ -344,6 +349,9 @@ const DEFAULT_PROFILE: Omit<GameProfile, "studentId"> = {
   currentStreak: 0,
   highestStreak: 0,
   lastHomeworkWeek: null,
+  petLastCleaned: null,
+  petLastFed: null,
+  petLastPlayed: null,
 };
 
 // ─── Firebase Operations ────────────────────────────────────────────
@@ -764,4 +772,120 @@ export async function saveQuestionProgress(studentId: string, homeworkId: string
   } catch (err) {
     console.error("Error saving question progress:", err);
   }
+}
+
+// ─── Pet Care (Tamagotchi) ───────────────────────────────────────────
+
+const PET_CARE_CYCLE_DAYS = 3;
+const PET_CARE_CYCLE_MS = PET_CARE_CYCLE_DAYS * 24 * 60 * 60 * 1000;
+
+export interface PetNeeds {
+  poopCount: number; // 0-5
+  isHungry: boolean;
+  isBored: boolean;
+}
+
+export function getPetNeeds(profile: GameProfile): PetNeeds {
+  if (!profile.petId) return { poopCount: 0, isHungry: false, isBored: false };
+
+  const now = Date.now();
+
+  // Poop: accumulates 1 per 3-day cycle, max 5
+  const lastCleaned = profile.petLastCleaned ? new Date(profile.petLastCleaned).getTime() : 0;
+  const cleanedElapsed = lastCleaned > 0 ? now - lastCleaned : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
+  const poopCount = Math.min(5, Math.floor(cleanedElapsed / PET_CARE_CYCLE_MS));
+
+  // Hunger: binary, true if > 3 days since last fed
+  const lastFed = profile.petLastFed ? new Date(profile.petLastFed).getTime() : 0;
+  const fedElapsed = lastFed > 0 ? now - lastFed : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
+  const isHungry = fedElapsed >= PET_CARE_CYCLE_MS;
+
+  // Boredom: binary, true if > 3 days since last played
+  const lastPlayed = profile.petLastPlayed ? new Date(profile.petLastPlayed).getTime() : 0;
+  const playedElapsed = lastPlayed > 0 ? now - lastPlayed : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
+  const isBored = playedElapsed >= PET_CARE_CYCLE_MS;
+
+  return { poopCount, isHungry, isBored };
+}
+
+export const PET_FOODS = [
+  { id: "food_apple", name: "Яблоко", emoji: "🍎", cost: 1, happiness: 1 },
+  { id: "food_pizza", name: "Пицца", emoji: "🍕", cost: 2, happiness: 2 },
+  { id: "food_cake",  name: "Торт",  emoji: "🎂", cost: 3, happiness: 3 },
+];
+
+export const PET_TOYS = [
+  { id: "toy_yarn",    name: "Клубок",          emoji: "🧶", cost: 1, happiness: 1 },
+  { id: "toy_ball",    name: "Мячик",           emoji: "⚽", cost: 2, happiness: 2 },
+  { id: "toy_teddy",   name: "Плюшевый мишка",  emoji: "🧸", cost: 3, happiness: 3 },
+  { id: "toy_gamepad", name: "Геймпад",         emoji: "🎮", cost: 4, happiness: 4 },
+];
+
+export async function cleanPet(studentId: string): Promise<{ success: boolean; error?: string; profile?: GameProfile }> {
+  try {
+    const profile = await getGameProfile(studentId);
+    if (profile.shopCoins < 2) return { success: false, error: "Недостаточно монет! Нужно 2 🪙" };
+    
+    profile.shopCoins -= 2;
+    profile.petLastCleaned = new Date().toISOString();
+    
+    await updateGameProfile(studentId, {
+      shopCoins: profile.shopCoins,
+      petLastCleaned: profile.petLastCleaned,
+    });
+    return { success: true, profile };
+  } catch (err) {
+    console.error("Error cleaning pet:", err);
+    return { success: false, error: "Ошибка сервера" };
+  }
+}
+
+export async function feedPet(studentId: string, foodId: string): Promise<{ success: boolean; error?: string; profile?: GameProfile; happiness?: number }> {
+  const food = PET_FOODS.find(f => f.id === foodId);
+  if (!food) return { success: false, error: "Еда не найдена" };
+  
+  try {
+    const profile = await getGameProfile(studentId);
+    if (profile.shopCoins < food.cost) return { success: false, error: `Недостаточно монет! Нужно ${food.cost} 🪙` };
+    
+    profile.shopCoins -= food.cost;
+    profile.petLastFed = new Date().toISOString();
+    
+    await updateGameProfile(studentId, {
+      shopCoins: profile.shopCoins,
+      petLastFed: profile.petLastFed,
+    });
+    return { success: true, profile, happiness: food.happiness };
+  } catch (err) {
+    console.error("Error feeding pet:", err);
+    return { success: false, error: "Ошибка сервера" };
+  }
+}
+
+export async function playWithPet(studentId: string, toyId: string): Promise<{ success: boolean; error?: string; profile?: GameProfile; happiness?: number }> {
+  const toy = PET_TOYS.find(t => t.id === toyId);
+  if (!toy) return { success: false, error: "Игрушка не найдена" };
+  
+  try {
+    const profile = await getGameProfile(studentId);
+    if (profile.shopCoins < toy.cost) return { success: false, error: `Недостаточно монет! Нужно ${toy.cost} 🪙` };
+    
+    profile.shopCoins -= toy.cost;
+    profile.petLastPlayed = new Date().toISOString();
+    
+    await updateGameProfile(studentId, {
+      shopCoins: profile.shopCoins,
+      petLastPlayed: profile.petLastPlayed,
+    });
+    return { success: true, profile, happiness: toy.happiness };
+  } catch (err) {
+    console.error("Error playing with pet:", err);
+    return { success: false, error: "Ошибка сервера" };
+  }
+}
+
+export function getHappyEmoji(happiness: number): string {
+  if (happiness >= 4) return "🤩";
+  if (happiness >= 3) return "😄";
+  return "😊";
 }

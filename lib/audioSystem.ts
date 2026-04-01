@@ -17,7 +17,7 @@ function getAudioContext() {
   return audioCtx;
 }
 
-export function playSound(type: "success" | "error" | "complete" | "purchase" | "levelUp") {
+export function playSound(type: "success" | "error" | "complete" | "purchase" | "levelUp" | "petCare") {
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -119,5 +119,21 @@ export function playSound(type: "success" | "error" | "complete" | "purchase" | 
     
     oscillator.start(now);
     oscillator.stop(now + (4 * duration) + 0.3);
+  }
+  else if (type === "petCare") {
+    // Warm, bubbly "pop-pop-ding" for caring actions
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(523.25, now);      // C5
+    oscillator.frequency.setValueAtTime(659.25, now + 0.08); // E5
+    oscillator.frequency.setValueAtTime(783.99, now + 0.16); // G5
+    oscillator.frequency.setValueAtTime(1046.5, now + 0.24); // C6
+
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.25, now + 0.03);
+    gainNode.gain.setValueAtTime(0.25, now + 0.24);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.5);
   }
 }
