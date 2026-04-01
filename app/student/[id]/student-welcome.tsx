@@ -2,16 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame, Trophy } from "lucide-react";
+import { UserCircle, Video, BookOpen, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
-import { countUncompletedHomework, fetchAllStudentRatings } from "@/lib/firebase";
+import { countUncompletedHomework } from "@/lib/firebase";
 import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getShopRewardById, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel, getPetNeeds, PetNeeds } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
 import PetAvatar from "@/components/PetAvatar";
 import PetCarePopover from "@/components/PetCarePopover";
-import StudentLeaderboard from "@/components/StudentLeaderboard";
 
 interface StudentData {
   id: string;
@@ -56,7 +55,6 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [uncompletedCount, setUncompletedCount] = useState<number>(0);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [showShop, setShowShop] = useState(false);
-  const [showRating, setShowRating] = useState(false);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
   const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | "thirst" | null>(null);
@@ -249,8 +247,6 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               </div>
             </div>
 
-
-
             {/* Homework Button - Enhanced */}
             <div>
               <Button
@@ -316,12 +312,21 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
           <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
             <div className="relative">
               {petReaction && (
-                <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                <div
+                  className={`absolute rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md ${
+                    petNeeds.poopCount > 0 && petReaction === "🤢"
+                      ? "-top-10 left-1/2 -translate-x-1/2"
+                      : "-top-9 right-2 animate-bounce"
+                  }`}
+                >
                   {petReaction}
                 </div>
               )}
               {petPhrase && (
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+                <div
+                  className="absolute -top-14 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-normal text-center break-words"
+                  style={{ maxWidth: "min(16rem, calc(100vw - 1rem))" }}
+                >
                   {petPhrase}
                 </div>
               )}
@@ -344,19 +349,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 >
                   {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                     <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
-                      💩{i === 0 && (
-                        <span 
-                          className="absolute -top-6 -right-2 text-2xl animate-pulse cursor-help"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPetPhrase("Плохо пахнет! Нужно убраться! 🧹");
-                            triggerPetReaction("🤢");
-                          }}
-                          title="Очень плохо пахнет!"
-                        >
-                          🤢
-                        </span>
-                      )}
+                      💩
                     </span>
                   ))}
                 </button>

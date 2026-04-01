@@ -1276,12 +1276,21 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
           <div className="relative">
             {petReaction && (
-              <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+              <div
+                className={`absolute rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md ${
+                  petNeeds.poopCount > 0 && petReaction === "🤢"
+                    ? "-top-10 left-1/2 -translate-x-1/2"
+                    : "-top-9 right-2 animate-bounce"
+                }`}
+              >
                 {petReaction}
               </div>
             )}
             {petPhrase && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+              <div
+                className="absolute -top-14 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-normal text-center break-words"
+                style={{ maxWidth: "min(16rem, calc(100vw - 1rem))" }}
+              >
                 {petPhrase}
               </div>
             )}
@@ -1304,19 +1313,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               >
                 {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                   <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
-                    💩{i === 0 && (
-                      <span 
-                        className="absolute -top-6 -right-2 text-2xl animate-pulse cursor-help"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPetPhrase("Плохо пахнет! Нужно убраться! 🧹");
-                          triggerPetReaction("🤢");
-                        }}
-                        title="Очень плохо пахнет!"
-                      >
-                        🤢
-                      </span>
-                    )}
+                    💩
                   </span>
                 ))}
               </button>

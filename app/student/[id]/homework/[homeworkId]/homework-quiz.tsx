@@ -939,7 +939,10 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
               </div>
             )}
             {petPhrase && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+              <div
+                className="absolute -top-14 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-normal text-center break-words"
+                style={{ maxWidth: "min(16rem, calc(100vw - 1rem))" }}
+              >
                 {petPhrase}
               </div>
             )}
