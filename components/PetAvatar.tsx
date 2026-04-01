@@ -170,7 +170,16 @@ export default function PetAvatar({ petId, accessories = [], size = "md", classN
 
       {/* Vehicle shown below the pet */}
       {vehicleEmoji && (
-        <div className={`${vehicleSizeMap[size]} leading-none -mt-1 drop-shadow-sm`}>
+        <div className={`leading-none -mt-1 drop-shadow-sm transition-all duration-500 ${
+          (vehicleId === 'veh_football' || vehicleId === 'veh_car') ? 'scale-[1.6] mt-1 origin-top' : 
+          (vehicleId === 'veh_ufo' || vehicleId === 'veh_rocket') ? 'scale-[2.4] mt-5 origin-top brightness-110 drop-shadow-2xl' : ''
+        } ${vehicleId === 'veh_football' ? 'animate-bounce' : ''} ${
+          vehicleId === 'veh_ufo' ? 'animate-pulse' : ''
+        }`}
+        style={{ 
+          animationDuration: vehicleId === 'veh_football' ? '3s' : (vehicleId === 'veh_ufo' ? '2s' : undefined),
+          fontSize: (vehicleId === 'veh_ufo' || vehicleId === 'veh_rocket') ? '2.5rem' : vehicleSizeMap[size]
+        }}>
           {vehicleEmoji}
         </div>
       )}

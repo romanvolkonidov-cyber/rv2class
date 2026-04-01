@@ -123,11 +123,11 @@ export default function StudentsPetsModal({ isOpen, onClose }: StudentsPetsModal
                     onClick={() => setSelectedStudent({ id: profile.studentId, name: studentName })}
                   >
                     {/* Pet Needs Overlay */}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1 z-20">
-                      {needs.poopCount > 0 && <span className="text-lg bg-white/80 rounded-full w-7 h-7 flex items-center justify-center shadow-sm" title="Нужна уборка">💩</span>}
-                      {needs.isHungry && <span className="text-lg bg-white/80 rounded-full w-7 h-7 flex items-center justify-center shadow-sm" title="Голоден">🍽️</span>}
-                      {needs.isThirsty && <span className="text-lg bg-white/80 rounded-full w-7 h-7 flex items-center justify-center shadow-sm" title="Хочет пить">💧</span>}
-                      {needs.isBored && <span className="text-lg bg-white/80 rounded-full w-7 h-7 flex items-center justify-center shadow-sm" title="Скучно">😐</span>}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
+                      {needs.poopCount > 0 && <span className="text-2xl bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-md animate-bounce" style={{animationDuration: '3s'}} title="Нужна уборка">💩</span>}
+                      {needs.isHungry && <span className="text-2xl bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-md animate-pulse" title="Голоден">🍽️</span>}
+                      {needs.isThirsty && <span className="text-2xl bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-md animate-pulse" title="Хочет пить">💧</span>}
+                      {needs.isBored && <span className="text-2xl bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-md animate-pulse" title="Скучно">😐</span>}
                     </div>
 
                     <div className="relative mb-4 flex-1 flex items-center justify-center">

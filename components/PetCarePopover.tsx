@@ -99,7 +99,7 @@ export default function PetCarePopover({
   };
 
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-64 animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="absolute bottom-full right-0 mb-3 z-50 w-64 animate-in fade-in slide-in-from-bottom-2 duration-200">
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         {/* Header */}
         <div className={`px-4 py-3 flex items-center justify-between ${
@@ -218,7 +218,7 @@ export default function PetCarePopover({
       </div>
 
       {/* Triangle pointer */}
-      <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-white border-b border-r border-slate-200 rotate-45" />
+      <div className="absolute right-6 -bottom-2 w-4 h-4 bg-white border-b border-r border-slate-200 rotate-45" />
     </div>
   );
 }

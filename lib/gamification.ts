@@ -458,6 +458,10 @@ export interface AwardResult {
   newBadges: Badge[];
   comebackBonusCoins: number;
   streakOutcome: "started" | "kept" | "same_week" | "reset";
+  streakMultiplier: number;
+  punctualityMultiplier: number;
+  weekendMultiplier: number;
+  bonusCoinsFromMultipliers: number;
   missedWeeks: number;
   updatedProfile: GameProfile;
 }
@@ -499,7 +503,6 @@ export async function awardHomeworkXP(
 
   // Update profile
   profile.xp += xpBreakdown.totalXP;
-  profile.shopCoins += xpBreakdown.coinsEarned;
   profile.totalHomeworksCompleted += 1;
   if (score === 100) profile.perfectScores += 1;
   if (score >= 90) profile.highScores += 1;
@@ -558,6 +561,33 @@ export async function awardHomeworkXP(
     }
   }
 
+  // Multiplier Calculations
+  const streakMultiplier = profile.currentStreak >= 3 ? 1.2 : 1.0;
+  const isWeekend = [0, 6].includes(new Date().getDay());
+  const weekendMultiplier = isWeekend ? 1.5 : 1.0;
+
+  // Punctuality check: No pending assignments older than 7 days
+  const assignmentsRef = collection(db, "telegramAssignments");
+  const q = query(assignmentsRef, where("studentId", "==", studentId), where("status", "==", "pending"));
+  const pendingSnap = await getDocs(q);
+  const now = Date.now();
+  const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+  
+  const hasOverdue = pendingSnap.docs.some(doc => {
+    const data = doc.data();
+    const assignedTime = data.assignedAt?.seconds ? data.assignedAt.seconds * 1000 : new Date(data.assignedAt).getTime();
+    return (now - assignedTime) > ONE_WEEK;
+  });
+  
+  const punctualityMultiplier = !hasOverdue ? 1.3 : 1.0;
+
+  const baseCoins = xpBreakdown.coinsEarned;
+  const totalMultiplier = streakMultiplier * punctualityMultiplier * weekendMultiplier;
+  const totalCoinsWithMultipliers = Math.floor(baseCoins * totalMultiplier);
+  const bonusCoinsFromMultipliers = totalCoinsWithMultiplier - baseCoins;
+  
+  profile.shopCoins += totalCoinsWithMultipliers;
+
   const newLevel = getLevelForXP(profile.xp);
   const leveledUp = newLevel.level > previousLevel.level;
 
@@ -585,6 +615,10 @@ export async function awardHomeworkXP(
     newBadges,
     comebackBonusCoins,
     streakOutcome,
+    streakMultiplier,
+    punctualityMultiplier,
+    weekendMultiplier,
+    bonusCoinsFromMultipliers,
     missedWeeks,
     updatedProfile: profile,
   };

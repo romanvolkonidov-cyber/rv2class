@@ -455,6 +455,41 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                         <span className="text-gray-600">🪙 Coins earned</span>
                         <span className="font-bold text-amber-600">+{xp.coinsEarned} coins</span>
                       </div>
+                      {awardResult && awardResult.bonusCoinsFromMultipliers > 0 && (
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border-2 border-amber-200 mt-4 animate-in zoom-in duration-500">
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                            <span className="font-black text-amber-800 uppercase tracking-widest text-sm">КОМБО-МНОЖИТЕЛИ</span>
+                          </div>
+                          <div className="flex justify-around items-center mb-3">
+                            {awardResult.streakMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">🔥</span>
+                                <span className="text-[10px] font-bold text-amber-700 uppercase">СЕРИЯ</span>
+                                <span className="text-sm font-black text-amber-600">x{awardResult.streakMultiplier}</span>
+                              </div>
+                            )}
+                            {awardResult.punctualityMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">⚡</span>
+                                <span className="text-[10px] font-bold text-emerald-700 uppercase">СКОРОСТЬ</span>
+                                <span className="text-sm font-black text-emerald-600">x{awardResult.punctualityMultiplier}</span>
+                              </div>
+                            )}
+                            {awardResult.weekendMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">🎈</span>
+                                <span className="text-[10px] font-bold text-rose-700 uppercase">ВЫХОДНОЙ</span>
+                                <span className="text-sm font-black text-rose-600">x{awardResult.weekendMultiplier}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex border-t border-amber-200 pt-2 justify-between items-center px-2">
+                             <span className="text-xs font-bold text-amber-900">ИТОГО БОНУС:</span>
+                             <span className="text-lg font-black text-amber-600 animate-pulse">+{awardResult.bonusCoinsFromMultipliers} монет!</span>
+                          </div>
+                        </div>
+                      )}
                       {awardResult && awardResult.comebackBonusCoins > 0 && (
                         <div className="flex justify-between px-4">
                           <span className="text-gray-600">🎁 Comeback bonus</span>

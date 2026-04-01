@@ -2,15 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame } from "lucide-react";
+import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
-import { countUncompletedHomework } from "@/lib/firebase";
+import { countUncompletedHomework, fetchAllStudentRatings } from "@/lib/firebase";
 import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel, getPetNeeds, PetNeeds } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
 import PetAvatar from "@/components/PetAvatar";
 import PetCarePopover from "@/components/PetCarePopover";
+import StudentLeaderboard from "@/components/StudentLeaderboard";
 
 interface StudentData {
   id: string;
@@ -55,6 +56,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [uncompletedCount, setUncompletedCount] = useState<number>(0);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [showShop, setShowShop] = useState(false);
+  const [showRating, setShowRating] = useState(false);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
   const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | "thirst" | null>(null);
@@ -287,6 +289,26 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 </button>
               </div>
             </div>
+
+            {/* Quick Actions (Shop & Rating) */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-12 border-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold shadow-sm"
+                onClick={() => setShowShop(true)}
+              >
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                Магазин
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 border-2 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold shadow-sm"
+                onClick={() => setShowRating(true)}
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                Рейтинг
+              </Button>
+            </div>
             {gameProfile && (
               <div className="flex flex-col items-center pt-6 border-t border-slate-200 mt-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">🌳 Дерево знаний</h3>
@@ -318,13 +340,23 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               {petNeeds.poopCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
-                  className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
+                  onClick={() => {
+                    if (activeCareNeed === "poop") {
+                      setActiveCareNeed(null);
+                    } else {
+                      setActiveCareNeed("poop");
+                      setPetPhrase("Здесь плохо пахнет... Нужно убраться! 🧹");
+                      triggerPetReaction("🤢");
+                    }
+                  }}
+                  className="absolute -bottom-4 -left-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer animate-bounce"
                   style={{ animationDuration: '2s' }}
                   title="Убрать!"
                 >
                   {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
-                    <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
+                    <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
+                      💩{i === 0 && <span className="absolute -top-6 -right-2 text-2xl animate-pulse">🤢</span>}
+                    </span>
                   ))}
                 </button>
               )}
@@ -332,36 +364,44 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 <button
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
-                  className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  className="absolute -top-6 -right-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                   title="Покормить!"
                 >
-                  <span className="animate-pulse">🍽️</span>
+                  <span className="animate-pulse drop-shadow-lg">🍽️</span>
                 </button>
               )}
               {petNeeds.isBored && (
                 <button
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
-                  className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  className="absolute -top-6 -left-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                   title="Поиграть!"
                 >
-                  <span className="animate-pulse">😐</span>
+                  <span className="animate-pulse drop-shadow-lg">😐</span>
                 </button>
               )}
               {petNeeds.isThirsty && (
                 <button
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
-                  className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  className="absolute bottom-4 -right-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                   title="Попоить!"
                 >
-                  <span className="animate-pulse drop-shadow-md">💧</span>
+                  <span className="animate-pulse drop-shadow-xl">💧</span>
                 </button>
               )}
               {!hasNeeds && (
-                <div className="absolute top-0 -right-2 z-40 text-2xl animate-pulse pointer-events-none drop-shadow-md">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setPetPhrase("Я очень счастлив! 💖");
+                    triggerPetReaction("🤩");
+                  }}
+                  className="absolute -top-2 -right-4 z-40 text-4xl animate-pulse cursor-pointer drop-shadow-xl hover:scale-125 transition-transform"
+                  title="Питомец счастлив!"
+                >
                   💖
-                </div>
+                </button>
               )}
 
               {/* Care Popover */}
@@ -401,6 +441,17 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
           onClose={() => setShowShop(false)}
           profile={gameProfile}
           onProfileUpdate={(updated) => setGameProfile(updated)}
+        />
+      )}
+
+      {/* Leaderboard Modal */}
+      {gameProfile && (
+        <StudentLeaderboard 
+          isOpen={showRating}
+          onClose={() => setShowRating(false)}
+          studentId={student.id}
+          studentName={student.name}
+          onHappyReaction={triggerPetReaction}
         />
       )}
 

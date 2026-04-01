@@ -421,6 +421,112 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
           Вернуться на главную
         </MuiButton>
 
+        {/* Multipliers Dashboard */}
+        {gameProfile && (
+          <MuiCard sx={{ 
+            maxWidth: 980, 
+            mx: 'auto', 
+            mb: 4, 
+            p: 0, 
+            borderRadius: 4,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            background: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+          }}>
+            <Box sx={{ 
+              p: 2, 
+              background: 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)', 
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, display: 'flex', alignItems: 'center', gap: 1 }}>
+                🚀 КОМБО-МНОЖИТЕЛИ МОНЕТ
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700 }}>
+                Множители складываются! Максимум 2.34x
+              </Typography>
+            </Box>
+            
+            <Stack direction={{ xs: 'column', sm: 'row' }} divider={<Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />} sx={{ p: 2 }}>
+              {/* Streak Multiplier */}
+              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                  <Flame size={18} color={gameProfile.currentStreak >= 3 ? "#f59e0b" : "#94a3b8"} />
+                  <Typography variant="body2" sx={{ fontWeight: 800, color: gameProfile.currentStreak >= 3 ? '#b45309' : '#64748b' }}>
+                    Серия 1.2x
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={gameProfile.currentStreak >= 3 ? "АКТИВНО" : `${gameProfile.currentStreak}/3 нед.`} 
+                  size="small"
+                  variant={gameProfile.currentStreak >= 3 ? "filled" : "outlined"}
+                  sx={{ 
+                    height: 18, 
+                    fontSize: '0.65rem', 
+                    fontWeight: 900,
+                    bgcolor: gameProfile.currentStreak >= 3 ? '#f59e0b' : 'transparent',
+                    color: gameProfile.currentStreak >= 3 ? 'white' : '#64748b'
+                  }}
+                />
+              </Box>
+
+              {/* Punctuality Multiplier */}
+              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                  <Zap size={18} color={!progress.isOverdue ? "#10b981" : "#94a3b8"} />
+                  <Typography variant="body2" sx={{ fontWeight: 800, color: !progress.isOverdue ? '#065f46' : '#64748b' }}>
+                    Скорость 1.3x
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={!progress.isOverdue ? "АКТИВНО" : "ЕСТЬ ДОЛГИ"} 
+                  size="small"
+                  variant={!progress.isOverdue ? "filled" : "outlined"}
+                  sx={{ 
+                    height: 18, 
+                    fontSize: '0.65rem', 
+                    fontWeight: 900,
+                    bgcolor: !progress.isOverdue ? '#10b981' : 'transparent',
+                    color: !progress.isOverdue ? 'white' : '#64748b'
+                  }}
+                />
+              </Box>
+
+              {/* Weekend Multiplier */}
+              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                  <Star size={18} color={[0, 6].includes(new Date().getDay()) ? "#ec4899" : "#94a3b8"} />
+                  <Typography variant="body2" sx={{ fontWeight: 800, color: [0, 6].includes(new Date().getDay()) ? '#9d174d' : '#64748b' }}>
+                    Выходной 1.5x
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={[0, 6].includes(new Date().getDay()) ? "АКТИВНО" : "БУДНИ"} 
+                  size="small"
+                  variant={[0, 6].includes(new Date().getDay()) ? "filled" : "outlined"}
+                  sx={{ 
+                    height: 18, 
+                    fontSize: '0.65rem', 
+                    fontWeight: 900,
+                    bgcolor: [0, 6].includes(new Date().getDay()) ? '#ec4899' : 'transparent',
+                    color: [0, 6].includes(new Date().getDay()) ? 'white' : '#64748b'
+                  }}
+                />
+              </Box>
+            </Stack>
+            
+            <Box sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                💡 Делай уроки каждую неделю и не копи долги дольше 7 дней, чтобы получать максимум наград!
+              </Typography>
+            </Box>
+          </MuiCard>
+        )}
+
         {/* Gamification Dashboard */}
         {gameProfile && level && progress && (
           <Box sx={{ maxWidth: 980, mx: 'auto', mb: 4 }}>
@@ -444,7 +550,21 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                       <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Flame size={20} /> {gameProfile.currentStreak}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b' }}>Серия</Typography>
+                      {gameProfile.currentStreak >= 3 && (
+                        <Chip 
+                          label="1.2x Boost!" 
+                          size="small" 
+                          sx={{ 
+                            height: 16, 
+                            fontSize: '0.6rem', 
+                            bgcolor: '#f59e0b', 
+                            color: 'white', 
+                            fontWeight: 900,
+                            mb: 0.5
+                          }} 
+                        />
+                      )}
+                      <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>Серия</Typography>
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -502,8 +622,16 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                       </Typography>
                     </Box>
                   )}
-                </Stack>
-              </MuiCard>
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(245, 158, 11, 0.08)', borderRadius: 2, border: '1px dashed rgba(245, 158, 11, 0.4)' }}>
+                      <Typography variant="subtitle2" sx={{ color: '#b45309', fontWeight: 900, mb: 0.5, fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                        💡 Как получить бонус?
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#92400e', fontWeight: 600, display: 'block', lineHeight: 1.3 }}>
+                        Выполняй задания каждую неделю без пропусков (не оставляй дз более чем на 7 дней). Через <strong>3 недели</strong> активируется <strong>1.2x множитель монет</strong> и будет действовать, пока ты не прервёшь серию!
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </MuiCard>
             </Stack>
 
             {/* Badges Row */}
@@ -587,7 +715,25 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     py: 1,
                   }}
                 >
-                  Рейтинг учеников
+                  Рейтинг
+                </MuiButton>
+
+                {/* Shop Button */}
+                <MuiButton
+                  variant="contained"
+                  startIcon={<ShoppingBag size={18} />}
+                  onClick={() => setShowShop(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #d97706 0%, #c2410c 100%)',
+                    },
+                    fontWeight: 700,
+                    px: 2,
+                    py: 1,
+                  }}
+                >
+                  Магазин
                 </MuiButton>
 
                 {/* Pets Button */}
@@ -1070,13 +1216,23 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             {petNeeds.poopCount > 0 && (
               <button
                 type="button"
-                onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
-                className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
+                onClick={() => {
+                  if (activeCareNeed === "poop") {
+                    setActiveCareNeed(null);
+                  } else {
+                    setActiveCareNeed("poop");
+                    setPetPhrase("Здесь плохо пахнет... Нужно убраться! 🧹");
+                    triggerPetReaction("🤢");
+                  }
+                }}
+                className="absolute -bottom-4 -left-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer animate-bounce"
                 style={{ animationDuration: '2s' }}
                 title="Убрать!"
               >
                 {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
-                  <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
+                  <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
+                    💩{i === 0 && <span className="absolute -top-6 -right-2 text-2xl animate-pulse">🤢</span>}
+                  </span>
                 ))}
               </button>
             )}
@@ -1084,37 +1240,45 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               <button
                 type="button"
                 onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
-                className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                className="absolute -top-6 -right-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Покормить!"
               >
-                <span className="animate-pulse">🍽️</span>
+                <span className="animate-pulse drop-shadow-lg">🍽️</span>
               </button>
             )}
             {petNeeds.isBored && (
               <button
                 type="button"
                 onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
-                className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                className="absolute -top-6 -left-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Поиграть!"
               >
-                <span className="animate-pulse">😐</span>
+                <span className="animate-pulse drop-shadow-lg">😐</span>
               </button>
             )}
             {petNeeds.isThirsty && (
               <button
                 type="button"
                 onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
-                className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                className="absolute bottom-4 -right-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Попоить!"
               >
-                <span className="animate-pulse drop-shadow-md">💧</span>
+                <span className="animate-pulse drop-shadow-xl">💧</span>
               </button>
             )}
 
             {!hasNeeds && (
-              <div className="absolute top-0 -right-2 z-40 text-2xl animate-pulse pointer-events-none drop-shadow-md">
+              <button 
+                type="button"
+                onClick={() => {
+                  setPetPhrase("Я очень счастлив! 💖");
+                  triggerPetReaction("🤩");
+                }}
+                className="absolute -top-2 -right-4 z-40 text-4xl animate-pulse cursor-pointer drop-shadow-xl hover:scale-125 transition-transform"
+                title="Питомец счастлив!"
+              >
                 💖
-              </div>
+              </button>
             )}
 
             {/* Care Popover */}
