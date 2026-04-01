@@ -47,9 +47,11 @@ const StudentLeaderboard: React.FC<StudentLeaderboardProps> = ({
       console.log("📊 Fetching all student ratings for leaderboard...");
       const allRatings = await fetchAllStudentRatings();
       
-      // Filter out students who have never completed any homework
+      // Filter out students who have never completed any homework or are test accounts
       const filteredRatings = allRatings.filter((rating: any) => 
-        rating.completedHomeworks && rating.completedHomeworks > 0
+        rating.completedHomeworks && 
+        rating.completedHomeworks > 0 && 
+        rating.studentName?.toLowerCase() !== "testingg"
       );
       
       // Fetch game profiles for all filtered students to get their Level and League

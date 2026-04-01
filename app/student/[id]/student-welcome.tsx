@@ -124,14 +124,9 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
       setPetPhrase(null);
       return;
     }
-    
-    if (hasNeeds) {
-      setPetPhrase("Купи мне что-нибудь! 🥺");
-      setTimeout(() => setShowShop(true), 1500); // Open shop automatically after a moment
-    } else {
-      setPetPhrase("Я очень счастлив! 💖");
-      triggerPetReaction("🤩");
-    }
+    setPetPhrase("Купи мне что-нибудь! 🥺");
+    triggerPetReaction("🤩");
+    setTimeout(() => setShowShop(true), 1500);
   };
 
   const handleJoinClass = async () => {
@@ -208,34 +203,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               </div>
             </div>
 
-            {/* XP Bar in header */}
-            {level && progress && (
-              <div className="mt-4 bg-black/20 rounded-xl p-3 backdrop-blur-md border border-white/10 shadow-inner">
-                <div className="flex items-center justify-between text-white text-sm mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{level.emoji}</span>
-                    <span className="font-bold">Lv.{level.level} {level.title}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1 text-xs" title="Weekly Streak"><Flame className={`h-3 w-3 ${gameProfile?.currentStreak && gameProfile.currentStreak > 0 ? "text-orange-500" : "text-gray-400"}`} />{gameProfile?.currentStreak || 0}</span>
-                    <span className="flex items-center gap-1 text-xs" title="Total XP"><Zap className="h-3 w-3 text-cyan-400" />{gameProfile?.xp} XP</span>
-                    <span className="flex items-center gap-1 text-xs" title="Shop Coins"><Coins className="h-3 w-3 text-yellow-300" />{gameProfile?.shopCoins}</span>
-                  </div>
-                </div>
-                <div className="w-full bg-black/40 rounded-full h-2 shadow-inner">
-                  <div
-                    className="bg-gradient-to-r from-yellow-300 to-amber-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(252,211,77,0.8)]"
-                    style={{ width: `${progress.percent}%` }}
-                  />
-                </div>
-                {progress.needed > 0 && (
-                  <div className="text-white/90 font-medium text-[10px] mt-1 text-right">{progress.current}/{progress.needed} to Lv.{level.level + 1}</div>
-                )}
-                <div className="mt-2 text-[10px] text-white/90 font-medium">
-                  Недельная серия: если каждую неделю делать хотя бы 1 ДЗ, серия растёт 🔥
-                </div>
-              </div>
-            )}
+
           </div>
 
           <div className="p-6 sm:p-8 space-y-5">
@@ -269,63 +237,10 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   </div>
                 )}
 
-                {/* Badges compact display */}
-                {gameProfile && gameProfile.unlockedBadges.length > 0 && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-xs text-gray-500 font-medium">Badges:</span>
-                    <BadgeDisplay
-                      unlockedBadges={gameProfile.unlockedBadges}
-                      purchasedRewards={gameProfile.purchasedRewards}
-                      compact
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
-            {gameProfile && nextShopUnlock && (
-              <div className="glass-surface rounded-2xl p-4 sm:p-5">
-                <div className="text-sm font-bold text-gray-800 mb-2">Следующая цель</div>
-                <div className="space-y-1 text-sm text-gray-700">
-                  {nextLevel ? (
-                    <div>До следующего уровня {nextLevel.emoji} осталось: <span className="font-bold">{Math.max(0, nextLevel.xpRequired - gameProfile.xp)} XP</span></div>
-                  ) : masterTier?.atMaxLevel ? (
-                    <div>
-                      Мастер-тир {masterTier.tier}: до следующего тира
-                      <span className="font-bold"> {masterTier.xpPerTier - masterTier.xpIntoTier} XP</span>
-                    </div>
-                  ) : (
-                    <div>Максимальный уровень уже достигнут 🏆</div>
-                  )}
-                  {nextShopUnlock.reward ? (
-                    <div>
-                      До награды {nextShopUnlock.reward.emoji} <span className="font-semibold">{nextShopUnlock.reward.name}</span>:
-                      {nextShopUnlock.coinsNeeded > 0 ? (
-                        <span className="font-bold"> {nextShopUnlock.coinsNeeded} монет</span>
-                      ) : (
-                        <span className="font-bold text-emerald-700"> можно купить прямо сейчас</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div>Все награды магазина уже куплены 🎉</div>
-                  )}
-                  {nextBadgeHint && (
-                    <div className="text-xs text-gray-600 mt-2">
-                      Ближайший бейдж: <span className="font-semibold">{nextBadgeHint.emoji} {nextBadgeHint.name}</span> — {nextBadgeHint.description}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {isFirstTimeStudent && (
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                <div className="font-bold mb-1">Как работает игровой прогресс</div>
-                <div>1) Делай ДЗ → получаешь XP и монеты</div>
-                <div>2) В магазине покупай аксессуары и награды</div>
-                <div>3) Открывай бейджи за достижения в заданиях</div>
-              </div>
-            )}
 
             {/* Homework Button - Enhanced */}
             <div>
@@ -348,21 +263,6 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               </Button>
             </div>
 
-            {/* Shop Button */}
-            {gameProfile && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full h-11 border-2 border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold touch-manipulation active:scale-95"
-                onClick={() => setShowShop(true)}
-              >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                Магазин наград
-                <span className="ml-2 flex items-center gap-1 text-xs bg-amber-100 rounded-full px-2 py-0.5">
-                  <Coins className="h-3 w-3" /> {gameProfile.shopCoins}
-                </span>
-              </Button>
-            )}
 
             {/* Join Lesson Button */}
             <div>
@@ -387,104 +287,8 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Gamification Bottom Area */}
-        {gameProfile && (
-          <div className="glass-panel rounded-3xl overflow-hidden p-5">
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-8 sm:gap-16">
-              
-              {/* Pet Display */}
-              {gameProfile.petId && (
-                <div className="flex flex-col items-center">
-                  <h3 className="text-sm font-bold text-gray-700 mb-3">Твой питомец</h3>
-                  <div className="relative" style={{ animationDuration: '3s' }}>
-                    {/* Pet Care Need Emojis */}
-                    {petNeeds.poopCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
-                        className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
-                        style={{ animationDuration: '2s' }}
-                        title="Убрать!"
-                      >
-                        {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
-                          <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
-                        ))}
-                      </button>
-                    )}
-                    {petNeeds.isHungry && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
-                        className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
-                        title="Покормить!"
-                      >
-                        <span className="animate-pulse">🍽️</span>
-                      </button>
-                    )}
-                    {petNeeds.isBored && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
-                        className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
-                        title="Поиграть!"
-                      >
-                        <span className="animate-pulse">😐</span>
-                      </button>
-                    )}
-                    {petNeeds.isThirsty && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
-                        className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
-                        title="Попоить!"
-                      >
-                        <span className="animate-pulse drop-shadow-md">💧</span>
-                      </button>
-                    )}
-
-                    {/* Care Popover */}
-                    {activeCareNeed && gameProfile && (
-                      <PetCarePopover
-                        needType={activeCareNeed}
-                        needs={petNeeds}
-                        profile={gameProfile}
-                        onProfileUpdate={(updated) => setGameProfile(updated)}
-                        onClose={() => setActiveCareNeed(null)}
-                        onHappyReaction={(emoji) => {
-                          setPetReaction(emoji);
-                          setTimeout(() => setPetReaction(null), 3000);
-                        }}
-                      />
-                    )}
-
-                    {petReaction && (
-                      <div className="absolute -top-9 right-1 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
-                        {petReaction}
-                      </div>
-                    )}
-                    {petPhrase && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
-                        {petPhrase}
-                      </div>
-                    )}
-                    <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
-                      <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" vehicleId={gameProfile.equippedVehicle} backgroundId={gameProfile.equippedBackground} />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3 font-medium">
-                    {hasNeeds
-                      ? "Нажми на эмодзи, чтобы позаботиться!"
-                      : "Питомцу комфортно! Можно покупать аксессуары в магазине."
-                    }
-                  </p>
-                </div>
-              )}
-
-              {/* Tree Display */}
-              <div className="flex flex-col items-center">
+            {gameProfile && (
+              <div className="flex flex-col items-center pt-6 border-t border-slate-200 mt-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">🌳 Дерево знаний</h3>
                 <div className="flex justify-center bg-white/40 p-3 rounded-full shadow-inner">
                   <GrowthTree health={gameProfile.treeHealth} size="md" />
@@ -493,7 +297,98 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   Выполняй задания вовремя,<br/>чтобы дерево росло и цвело!
                 </p>
               </div>
+            )}
+          </div>
+        </div>
 
+        {gameProfile?.petId && (
+          <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
+            <div className="relative">
+              {petReaction && (
+                <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                  {petReaction}
+                </div>
+              )}
+              {petPhrase && (
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-nowrap">
+                  {petPhrase}
+                </div>
+              )}
+              {/* Pet Care Need Emojis */}
+              {petNeeds.poopCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
+                  className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
+                  style={{ animationDuration: '2s' }}
+                  title="Убрать!"
+                >
+                  {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
+                    <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
+                  ))}
+                </button>
+              )}
+              {petNeeds.isHungry && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
+                  className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  title="Покормить!"
+                >
+                  <span className="animate-pulse">🍽️</span>
+                </button>
+              )}
+              {petNeeds.isBored && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
+                  className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  title="Поиграть!"
+                >
+                  <span className="animate-pulse">😐</span>
+                </button>
+              )}
+              {petNeeds.isThirsty && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
+                  className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                  title="Попоить!"
+                >
+                  <span className="animate-pulse drop-shadow-md">💧</span>
+                </button>
+              )}
+              {!hasNeeds && (
+                <div className="absolute top-0 -right-2 z-40 text-2xl animate-pulse pointer-events-none drop-shadow-md">
+                  💖
+                </div>
+              )}
+
+              {/* Care Popover */}
+              {activeCareNeed && gameProfile && (
+                <PetCarePopover
+                  needType={activeCareNeed}
+                  needs={petNeeds}
+                  profile={gameProfile}
+                  onProfileUpdate={(updated) => setGameProfile(updated)}
+                  onClose={() => setActiveCareNeed(null)}
+                  onHappyReaction={(emoji) => {
+                    setPetReaction(emoji);
+                    setTimeout(() => setPetReaction(null), 3000);
+                  }}
+                />
+              )}
+
+              <button type="button" onClick={togglePetPhrase} className="rounded-2xl relative">
+                <PetAvatar
+                  petId={gameProfile.petId}
+                  accessories={gameProfile.petAccessories || []}
+                  vehicleId={gameProfile.equippedVehicle}
+                  backgroundId={gameProfile.equippedBackground}
+                  size="lg"
+                  className="scale-110 shadow-xl"
+                />
+              </button>
             </div>
           </div>
         )}

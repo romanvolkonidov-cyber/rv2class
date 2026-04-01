@@ -47,6 +47,7 @@ export default function StudentsPetsModal({ isOpen, onClose }: StudentsPetsModal
           studentName: studentMap.get(p.studentId) || "Ученик",
           needs: getPetNeeds(p as GameProfile)
         }))
+        .filter(item => item.studentName.toLowerCase() !== "testingg")
         // Sort by needs descending (pets that need most care first) or alphabetically
         .sort((a, b) => {
            const needsA = (a.needs.poopCount > 0 ? 1 : 0) + (a.needs.isHungry ? 1 : 0) + (a.needs.isBored ? 1 : 0) + (a.needs.isThirsty ? 1 : 0);

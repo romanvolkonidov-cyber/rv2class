@@ -29,8 +29,20 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { BookOpen, Loader2, Trophy, X, Check, Star, TrendingUp, XCircle, Zap, Coins } from "lucide-react";
-import { getGameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, GameProfile, getPetNeeds, PetNeeds } from "@/lib/gamification";
+import { BookOpen, Loader2, Trophy, X, Check, Star, TrendingUp, XCircle, Zap, Coins, Flame, ShoppingBag } from "lucide-react";
+import { 
+  getGameProfile, 
+  getLevelForXP, 
+  getThemeVisualConfig, 
+  getXPProgress, 
+  GameProfile, 
+  getPetNeeds, 
+  PetNeeds, 
+  getMasterTierInfo, 
+  getNextLevel, 
+  getNextShopUnlock, 
+  getNextBadgeHint 
+} from "@/lib/gamification";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
 import PetAvatar from "@/components/PetAvatar";
@@ -134,14 +146,17 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
       return;
     }
     
-    if (hasNeeds) {
-      setPetPhrase("Купи мне что-нибудь! 🥺");
-      setTimeout(() => setShowShop(true), 1500); // Open shop automatically after a moment
-    } else {
-      setPetPhrase("Я очень счастлив! 💖");
-      triggerPetReaction("🤩");
-    }
+    setPetPhrase("Купи мне что-нибудь! 🥺");
+    triggerPetReaction("🤩");
+    setTimeout(() => setShowShop(true), 1500);
   };
+
+  const level = gameProfile ? getLevelForXP(gameProfile.xp) : null;
+  const progress = gameProfile ? getXPProgress(gameProfile.xp) : null;
+  const masterTier = gameProfile ? getMasterTierInfo(gameProfile.xp) : null;
+  const nextLevel = level ? getNextLevel(level.level) : null;
+  const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
+  const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
 
   useEffect(() => {
     setIsClient(true);
@@ -398,14 +413,114 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         </Box>
 
         <Box sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Back Button */}
         <MuiButton
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push(`/student/${studentId}`)}
           sx={{ mb: 3, color: 'text.secondary' }}
         >
-          Back to Welcome Page
+          Вернуться на главную
         </MuiButton>
+
+        {/* Gamification Dashboard */}
+        {gameProfile && level && progress && (
+          <Box sx={{ maxWidth: 980, mx: 'auto', mb: 4 }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+              {/* XP & Level Card */}
+              <MuiCard sx={{ flex: 2, p: 3, background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Typography variant="h3">{level.emoji}</Typography>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+                        Lv.{level.level} {level.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                        Текущий ранг
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Flame size={20} /> {gameProfile.currentStreak}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b' }}>Серия</Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Zap size={20} /> {gameProfile.xp}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#64748b' }}>Всего XP</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+
+                <Box sx={{ width: '100%', mb: 1 }}>
+                   <Box sx={{ position: 'relative', height: 10, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 5, overflow: 'hidden' }}>
+                     <Box 
+                       sx={{ 
+                         position: 'absolute', 
+                         height: '100%', 
+                         width: `${progress.percent}%`, 
+                         background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
+                         borderRadius: 5,
+                         transition: 'width 1s ease-in-out',
+                         boxShadow: '0 0 10px rgba(245, 158, 11, 0.4)'
+                       }} 
+                     />
+                   </Box>
+                   <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.5, fontWeight: 700, color: '#64748b' }}>
+                     {progress.needed > 0 ? `${progress.current} / ${progress.needed} XP до Lv.${level.level + 1}` : 'Максимальный уровень!'}
+                   </Typography>
+                </Box>
+              </MuiCard>
+
+              {/* Next Goals Card */}
+              <MuiCard sx={{ flex: 1, p: 3, background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🎯 Следующая цель
+                </Typography>
+                <Stack spacing={1.5}>
+                  {nextLevel && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem' }}>
+                        До {nextLevel.emoji}: <strong>{nextLevel.xpRequired - gameProfile.xp} XP</strong>
+                      </Typography>
+                    </Box>
+                  )}
+                  {nextShopUnlock?.reward && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem' }}>
+                        Награда {nextShopUnlock.reward.emoji}: {nextShopUnlock.coinsNeeded > 0 ? <strong>{nextShopUnlock.coinsNeeded} монеты</strong> : <strong style={{color: '#059669'}}>доступно!</strong>}
+                      </Typography>
+                    </Box>
+                  )}
+                  {nextBadgeHint && (
+                    <Box sx={{ display: 'flex', alignItems: 'start', gap: 1 }}>
+                      <Typography variant="body2" sx={{ color: '#4b5563', fontSize: '0.8rem', lineHeight: 1.2 }}>
+                        Бейдж {nextBadgeHint.emoji}: <em>{nextBadgeHint.description}</em>
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </MuiCard>
+            </Stack>
+
+            {/* Badges Row */}
+            {gameProfile.unlockedBadges.length > 0 && (
+              <MuiCard sx={{ mt: 3, p: 2, background: 'rgba(255, 255, 255, 0.6)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Мои Награды:</Typography>
+                  <BadgeDisplay 
+                    unlockedBadges={gameProfile.unlockedBadges} 
+                    purchasedRewards={gameProfile.purchasedRewards} 
+                    compact 
+                  />
+                </Stack>
+              </MuiCard>
+            )}
+          </Box>
+        )}
 
         <MuiCard sx={{ maxWidth: 980, mx: 'auto', borderRadius: 3, boxShadow: 6 }}>
           <MuiCardContent>
@@ -994,6 +1109,12 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               >
                 <span className="animate-pulse drop-shadow-md">💧</span>
               </button>
+            )}
+
+            {!hasNeeds && (
+              <div className="absolute top-0 -right-2 z-40 text-2xl animate-pulse pointer-events-none drop-shadow-md">
+                💖
+              </div>
             )}
 
             {/* Care Popover */}
