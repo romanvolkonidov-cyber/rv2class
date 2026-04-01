@@ -449,9 +449,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
         <StudentLeaderboard 
           isOpen={showRating}
           onClose={() => setShowRating(false)}
-          studentId={student.id}
-          studentName={student.name}
-          onHappyReaction={triggerPetReaction}
+          currentStudentId={student.id}
         />
       )}
 

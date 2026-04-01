@@ -1,5 +1,5 @@
 import { db, ensureAuth } from "./firebase";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 
 // ─── Level System ───────────────────────────────────────────────────
 
@@ -584,7 +584,7 @@ export async function awardHomeworkXP(
   const baseCoins = xpBreakdown.coinsEarned;
   const totalMultiplier = streakMultiplier * punctualityMultiplier * weekendMultiplier;
   const totalCoinsWithMultipliers = Math.floor(baseCoins * totalMultiplier);
-  const bonusCoinsFromMultipliers = totalCoinsWithMultiplier - baseCoins;
+  const bonusCoinsFromMultipliers = totalCoinsWithMultipliers - baseCoins;
   
   profile.shopCoins += totalCoinsWithMultipliers;
 

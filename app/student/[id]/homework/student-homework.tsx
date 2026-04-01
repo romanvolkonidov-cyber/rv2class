@@ -422,7 +422,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         </MuiButton>
 
         {/* Multipliers Dashboard */}
-        {gameProfile && (
+        {gameProfile && level && progress && (
           <MuiCard sx={{ 
             maxWidth: 980, 
             mx: 'auto', 
@@ -451,73 +451,83 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               </Typography>
             </Box>
             
-            <Stack direction={{ xs: 'column', sm: 'row' }} divider={<Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />} sx={{ p: 2 }}>
-              {/* Streak Multiplier */}
-              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                  <Flame size={18} color={gameProfile.currentStreak >= 3 ? "#f59e0b" : "#94a3b8"} />
-                  <Typography variant="body2" sx={{ fontWeight: 800, color: gameProfile.currentStreak >= 3 ? '#b45309' : '#64748b' }}>
-                    Серия 1.2x
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={gameProfile.currentStreak >= 3 ? "АКТИВНО" : `${gameProfile.currentStreak}/3 нед.`} 
-                  size="small"
-                  variant={gameProfile.currentStreak >= 3 ? "filled" : "outlined"}
-                  sx={{ 
-                    height: 18, 
-                    fontSize: '0.65rem', 
-                    fontWeight: 900,
-                    bgcolor: gameProfile.currentStreak >= 3 ? '#f59e0b' : 'transparent',
-                    color: gameProfile.currentStreak >= 3 ? 'white' : '#64748b'
-                  }}
-                />
-              </Box>
+            {(() => {
+              const isOverdue = assignments.some(a => {
+                if (a.status === 'completed') return false;
+                const assignedTime = a.assignedAt?.seconds ? a.assignedAt.seconds * 1000 : new Date(a.assignedAt).getTime();
+                return (Date.now() - assignedTime) > (7 * 24 * 60 * 60 * 1000);
+              });
 
-              {/* Punctuality Multiplier */}
-              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                  <Zap size={18} color={!progress.isOverdue ? "#10b981" : "#94a3b8"} />
-                  <Typography variant="body2" sx={{ fontWeight: 800, color: !progress.isOverdue ? '#065f46' : '#64748b' }}>
-                    Скорость 1.3x
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={!progress.isOverdue ? "АКТИВНО" : "ЕСТЬ ДОЛГИ"} 
-                  size="small"
-                  variant={!progress.isOverdue ? "filled" : "outlined"}
-                  sx={{ 
-                    height: 18, 
-                    fontSize: '0.65rem', 
-                    fontWeight: 900,
-                    bgcolor: !progress.isOverdue ? '#10b981' : 'transparent',
-                    color: !progress.isOverdue ? 'white' : '#64748b'
-                  }}
-                />
-              </Box>
+              return (
+                <Stack direction={{ xs: 'column', sm: 'row' }} divider={<Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />} sx={{ p: 2 }}>
+                  {/* Streak Multiplier */}
+                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                      <Flame size={18} color={gameProfile.currentStreak >= 3 ? "#f59e0b" : "#94a3b8"} />
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: gameProfile.currentStreak >= 3 ? '#b45309' : '#64748b' }}>
+                        Серия 1.2x
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={gameProfile.currentStreak >= 3 ? "АКТИВНО" : `${gameProfile.currentStreak}/3 нед.`} 
+                      size="small"
+                      variant={gameProfile.currentStreak >= 3 ? "filled" : "outlined"}
+                      sx={{ 
+                        height: 18, 
+                        fontSize: '0.65rem', 
+                        fontWeight: 900,
+                        bgcolor: gameProfile.currentStreak >= 3 ? '#f59e0b' : 'transparent',
+                        color: gameProfile.currentStreak >= 3 ? 'white' : '#64748b'
+                      }}
+                    />
+                  </Box>
 
-              {/* Weekend Multiplier */}
-              <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
-                  <Star size={18} color={[0, 6].includes(new Date().getDay()) ? "#ec4899" : "#94a3b8"} />
-                  <Typography variant="body2" sx={{ fontWeight: 800, color: [0, 6].includes(new Date().getDay()) ? '#9d174d' : '#64748b' }}>
-                    Выходной 1.5x
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={[0, 6].includes(new Date().getDay()) ? "АКТИВНО" : "БУДНИ"} 
-                  size="small"
-                  variant={[0, 6].includes(new Date().getDay()) ? "filled" : "outlined"}
-                  sx={{ 
-                    height: 18, 
-                    fontSize: '0.65rem', 
-                    fontWeight: 900,
-                    bgcolor: [0, 6].includes(new Date().getDay()) ? '#ec4899' : 'transparent',
-                    color: [0, 6].includes(new Date().getDay()) ? 'white' : '#64748b'
-                  }}
-                />
-              </Box>
-            </Stack>
+                  {/* Punctuality Multiplier */}
+                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                      <Zap size={18} color={!isOverdue ? "#10b981" : "#94a3b8"} />
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: !isOverdue ? '#065f46' : '#64748b' }}>
+                        Скорость 1.3x
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={!isOverdue ? "АКТИВНО" : "ЕСТЬ ДОЛГИ"} 
+                      size="small"
+                      variant={!isOverdue ? "filled" : "outlined"}
+                      sx={{ 
+                        height: 18, 
+                        fontSize: '0.65rem', 
+                        fontWeight: 900,
+                        bgcolor: !isOverdue ? '#10b981' : 'transparent',
+                        color: !isOverdue ? 'white' : '#64748b'
+                      }}
+                    />
+                  </Box>
+
+                  {/* Weekend Multiplier */}
+                  <Box sx={{ flex: 1, p: 1, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 0.5 }}>
+                      <Star size={18} color={[0, 6].includes(new Date().getDay()) ? "#ec4899" : "#94a3b8"} />
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: [0, 6].includes(new Date().getDay()) ? '#9d174d' : '#64748b' }}>
+                        Выходной 1.5x
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={[0, 6].includes(new Date().getDay()) ? "АКТИВНО" : "БУДНИ"} 
+                      size="small"
+                      variant={[0, 6].includes(new Date().getDay()) ? "filled" : "outlined"}
+                      sx={{ 
+                        height: 18, 
+                        fontSize: '0.65rem', 
+                        fontWeight: 900,
+                        bgcolor: [0, 6].includes(new Date().getDay()) ? '#ec4899' : 'transparent',
+                        color: [0, 6].includes(new Date().getDay()) ? 'white' : '#64748b'
+                      }}
+                    />
+                  </Box>
+                </Stack>
+              );
+            })()}
             
             <Box sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
               <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
