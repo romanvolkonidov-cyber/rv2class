@@ -279,20 +279,16 @@ export const fetchQuestionsForHomework = async (topicIds: string[]): Promise<Que
 
     // Fetch from telegramQuestions collection
     const questionsRef = collection(db, "telegramQuestions");
-    const allQuestions: Question[] = [];
     
-    // Fetch questions for each topic
-    for (const topicId of topicIds) {
-      const q = query(questionsRef, where("topicId", "==", topicId));
-      const querySnapshot = await getDocs(q);
-      
-      const topicQuestions = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Question[];
-      
-      allQuestions.push(...topicQuestions);
-    }
+    // Optimize: Use 'in' operator to fetch questions for all topics in one query
+    // Firestore 'in' query supports up to 30 items
+    const q = query(questionsRef, where("topicId", "in", topicIds.slice(0, 30)));
+    const querySnapshot = await getDocs(q);
+
+    const allQuestions = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Question[];
     
     // Sort by order field to maintain the correct sequence
     allQuestions.sort((a, b) => {

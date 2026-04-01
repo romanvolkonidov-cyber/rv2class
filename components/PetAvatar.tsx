@@ -52,7 +52,7 @@ const BACKGROUND_STYLES: Record<string, string> = {
 };
 
 const frameStyles: Record<string, string> = {
-  frame_silver: "ring-4 ring-slate-300 shadow-[0_0_0_6px_rgba(226,232,240,0.9)]",
+  frame_silver: "ring-4 ring-slate-400 shadow-[0_0_0_4px_rgba(255,255,255,0.95),0_0_0_9px_rgba(148,163,184,0.55)]",
   frame_gold: "ring-4 ring-amber-400 shadow-[0_0_0_6px_rgba(251,191,36,0.35)]",
   frame_flower: "ring-4 ring-pink-300 shadow-[0_0_0_6px_rgba(244,114,182,0.2)]",
   frame_star: "ring-4 ring-yellow-300 shadow-[0_0_0_6px_rgba(253,224,71,0.25)]",
@@ -63,6 +63,7 @@ const frameStyles: Record<string, string> = {
 };
 
 const frameDecorations: Record<string, string> = {
+  frame_silver: "◈",
   frame_flower: "🌸",
   frame_star: "⭐",
   frame_fire: "🔥",

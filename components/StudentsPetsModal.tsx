@@ -134,6 +134,7 @@ export default function StudentsPetsModal({ isOpen, onClose }: StudentsPetsModal
                       <PetAvatar 
                         petId={profile.petId!}
                         accessories={profile.petAccessories}
+                        frameId={profile.equippedFrame}
                         vehicleId={profile.equippedVehicle}
                         backgroundId={profile.equippedBackground}
                         size="md"

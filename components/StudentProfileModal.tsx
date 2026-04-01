@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Trophy, Star, Zap, Target, Medal, Crown } from "lucide-react";
-import { GameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, getLeagueForLevel } from "@/lib/gamification";
+import { GameProfile, getLevelForXP, getShopRewardById, getThemeVisualConfig, getXPProgress, getLeagueForLevel } from "@/lib/gamification";
 import { getGameProfile } from "@/lib/gamification";
 import PetAvatar from "./PetAvatar";
 import BadgeDisplay from "./BadgeDisplay";
@@ -47,6 +47,7 @@ export default function StudentProfileModal({
   const progress = profile ? getXPProgress(profile.xp) : null;
   const league = level ? getLeagueForLevel(level.level) : null;
   const themeVisual = getThemeVisualConfig(profile?.equippedTheme || null);
+  const equippedTitleReward = getShopRewardById(profile?.equippedTitle);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -73,6 +74,7 @@ export default function StudentProfileModal({
               <PetAvatar 
                 petId={profile.petId} 
                 accessories={profile.petAccessories} 
+                frameId={profile.equippedFrame}
                 size="lg" 
                 className="rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50"
                 vehicleId={profile.equippedVehicle}
@@ -101,9 +103,9 @@ export default function StudentProfileModal({
           {/* Name & Title */}
           <div>
             <h2 className="text-3xl font-bold text-slate-900">{studentName}</h2>
-            {profile?.equippedTitle && (
+            {equippedTitleReward && (
               <p className="text-indigo-600 font-semibold mt-1">
-                🏆 {profile.equippedTitle}
+                {equippedTitleReward.emoji} {equippedTitleReward.name}
               </p>
             )}
           </div>

@@ -42,7 +42,8 @@ import {
   getMasterTierInfo, 
   getNextLevel, 
   getNextShopUnlock, 
-  getNextBadgeHint 
+  getNextBadgeHint,
+  getShopRewardById 
 } from "@/lib/gamification";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
@@ -158,6 +159,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const nextLevel = level ? getNextLevel(level.level) : null;
   const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
   const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
+  const equippedTitleReward = getShopRewardById(gameProfile?.equippedTitle);
 
   useEffect(() => {
     setIsClient(true);
@@ -422,65 +424,99 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
           Вернуться на главную
         </MuiButton>
 
-        {/* Gamification Dashboard - Top Section */}
         {gameProfile && level && progress && (
           <Box sx={{ maxWidth: 980, mx: 'auto', mb: 2 }}>
+            {/* Themed Header Bar */}
+            <Box sx={{ 
+              mb: 2, 
+              p: 2, 
+              borderRadius: 3, 
+              background: gameProfile?.equippedTheme ? themeVisual.buttonGradient : 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+            }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box sx={{ p: 1, bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 2, display: 'flex' }}>
+                   <Trophy size={20} />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 900, letterSpacing: '0.02em' }}>
+                    ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА
+                  </Typography>
+                  {equippedTitleReward && (
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.25, fontWeight: 700, opacity: 0.95 }}>
+                      {equippedTitleReward.emoji} {equippedTitleReward.name}
+                    </Typography>
+                  )}
+                </Box>
+              </Stack>
+              <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.9 }}>
+                ID: {studentId.slice(0, 8)}
+              </Typography>
+            </Box>
+
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
               {/* XP & Level Card */}
               <MuiCard sx={{ 
                 flex: 2, 
-                p: {xs: 2, sm: 3}, 
+                p: 0,
                 background: 'rgba(255, 255, 255, 0.85)', 
                 backdropFilter: 'blur(12px)', 
                 border: '1px solid rgba(255, 255, 255, 0.4)',
                 borderRadius: 4,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.05)'
+                boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+                overflow: 'hidden'
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Typography variant="h3" sx={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}>{level.emoji}</Typography>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 850, color: '#1e293b', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                        Lv.{level.level} {level.title}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>
-                        Текущий ранг
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Stack direction="row" spacing={2.5}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Flame size={20} fill="#f59e0b" /> {gameProfile.currentStreak}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Серия</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Zap size={20} fill="#3b82f6" /> {gameProfile.xp}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Всего XP</Typography>
-                    </Box>
-                  </Stack>
-                </Box>
+                <Box sx={{ p: {xs: 2, sm: 3} }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Typography variant="h3" sx={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}>{level.emoji}</Typography>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 850, color: '#1e293b', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                          Lv.{level.level} {level.title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>
+                          Текущий ранг
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Stack direction="row" spacing={2.5}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ color: '#f59e0b', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Flame size={20} fill="#f59e0b" /> {gameProfile.currentStreak}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Серия</Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" sx={{ color: '#3b82f6', fontWeight: 850, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Zap size={20} fill="#3b82f6" /> {gameProfile.xp}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>Всего XP</Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
 
-                <Box sx={{ width: '100%', mb: 1 }}>
-                   <Box sx={{ position: 'relative', height: 12, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 6, overflow: 'hidden' }}>
-                     <Box 
-                       sx={{ 
-                         position: 'absolute', 
-                         height: '100%', 
-                         width: `${progress.percent}%`, 
-                         background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
-                         borderRadius: 6,
-                         transition: 'width 1s ease-in-out',
-                         boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
-                       }} 
-                     />
-                   </Box>
-                   <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.75, fontWeight: 800, color: '#64748b' }}>
-                     {progress.needed > 0 ? `${progress.current} / ${progress.needed} XP до Lv.${level.level + 1}` : 'Максимальный уровень! 🎉'}
-                   </Typography>
+                  <Box sx={{ width: '100%', mb: 1 }}>
+                     <Box sx={{ position: 'relative', height: 12, bgcolor: 'rgba(0,0,0,0.05)', borderRadius: 6, overflow: 'hidden' }}>
+                       <Box 
+                         sx={{ 
+                           position: 'absolute', 
+                           height: '100%', 
+                           width: `${progress.percent}%`, 
+                           background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
+                           borderRadius: 6,
+                           transition: 'width 1s ease-in-out',
+                           boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
+                         }} 
+                       />
+                     </Box>
+                     <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.75, fontWeight: 800, color: '#64748b' }}>
+                       {progress.needed > 0 ? `${progress.current} / ${progress.needed} XP до Lv.${level.level + 1}` : 'Максимальный уровень! 🎉'}
+                     </Typography>
+                  </Box>
                 </Box>
               </MuiCard>
 
@@ -1349,6 +1385,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               <PetAvatar
                 petId={gameProfile.petId}
                 accessories={gameProfile.petAccessories || []}
+                frameId={gameProfile.equippedFrame}
                 vehicleId={gameProfile.equippedVehicle}
                 backgroundId={gameProfile.equippedBackground}
                 size="lg"

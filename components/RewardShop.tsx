@@ -102,6 +102,10 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
   };
   const previewReward = previewRewardId ? SHOP_REWARDS.find(r => r.id === previewRewardId) || null : null;
   const previewPetId = profile.petId || "pet_fox";
+  const previewFrame = (() => {
+    if (previewReward?.type === "frame") return previewReward.id;
+    return profile.equippedFrame;
+  })();
   const previewVehicle = (() => {
     if (previewReward?.type === "vehicle") return previewReward.id;
     return profile.equippedVehicle;
@@ -161,7 +165,14 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
           <div className="sticky top-0 z-10 p-4 pb-2 bg-white">
             <div className="rounded-2xl border border-amber-200 bg-amber-50/95 backdrop-blur-lg p-4 shadow-sm">
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <PetAvatar petId={previewPetId} accessories={previewAccessories} size="md" vehicleId={previewVehicle} backgroundId={previewBackground} />
+                <PetAvatar
+                  petId={previewPetId}
+                  accessories={previewAccessories}
+                  frameId={previewFrame}
+                  size="md"
+                  vehicleId={previewVehicle}
+                  backgroundId={previewBackground}
+                />
                 <div className="text-center sm:text-left">
                   <div className="text-sm font-bold text-gray-800">Примерка питомца</div>
                   <div className="text-xs text-gray-600 mt-1">

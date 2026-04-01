@@ -36,7 +36,13 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [correctCount, setCorrectCount] = useState(0);
   const [awardResult, setAwardResult] = useState<AwardResult | null>(null);
   const [showXPAnimation, setShowXPAnimation] = useState(false);
-  const [quizPet, setQuizPet] = useState<{ petId: string; accessories: string[] } | null>(null);
+  const [quizPet, setQuizPet] = useState<{
+    petId: string;
+    accessories: string[];
+    frameId?: string | null;
+    vehicleId?: string | null;
+    backgroundId?: string | null;
+  } | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
   const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
@@ -188,7 +194,13 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
         const profile = await getGameProfile(studentId);
         setEquippedTheme(profile.equippedTheme || null);
         if (profile.petId) {
-          setQuizPet({ petId: profile.petId, accessories: profile.petAccessories || [] });
+          setQuizPet({
+            petId: profile.petId,
+            accessories: profile.petAccessories || [],
+            frameId: profile.equippedFrame,
+            vehicleId: profile.equippedVehicle,
+            backgroundId: profile.equippedBackground,
+          });
         }
         if (profile.progress && profile.progress[homeworkId]) {
           const hwProg = profile.progress[homeworkId];
@@ -623,7 +635,15 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                   {petReaction}
                 </div>
               )}
-              <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+              <PetAvatar
+                petId={quizPet.petId}
+                accessories={quizPet.accessories}
+                frameId={quizPet.frameId}
+                vehicleId={quizPet.vehicleId}
+                backgroundId={quizPet.backgroundId}
+                size="lg"
+                className="scale-110 shadow-xl"
+              />
             </div>
           </div>
         )}
@@ -924,7 +944,15 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
               </div>
             )}
             <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
-              <PetAvatar petId={quizPet.petId} accessories={quizPet.accessories} size="lg" className="scale-110 shadow-xl" />
+              <PetAvatar
+                petId={quizPet.petId}
+                accessories={quizPet.accessories}
+                frameId={quizPet.frameId}
+                vehicleId={quizPet.vehicleId}
+                backgroundId={quizPet.backgroundId}
+                size="lg"
+                className="scale-110 shadow-xl"
+              />
             </button>
           </div>
         </div>

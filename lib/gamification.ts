@@ -316,6 +316,11 @@ export const SHOP_REWARDS: ShopReward[] = [
   { id: "bg_crystal",      name: "Кристальная пещера",emoji: "💎", description: "Сверкающие самоцветы",    cost: 2000, type: "background" },
 ];
 
+export function getShopRewardById(rewardId: string | null | undefined): ShopReward | null {
+  if (!rewardId) return null;
+  return SHOP_REWARDS.find((reward) => reward.id === rewardId) || null;
+}
+
 // ─── Game Profile ───────────────────────────────────────────────────
 
 export interface GameProfile {

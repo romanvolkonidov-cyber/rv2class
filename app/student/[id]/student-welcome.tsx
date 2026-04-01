@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle, Video, BookOpen, GraduationCap, ShoppingBag, Coins, Zap, Flame, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { countUncompletedHomework, fetchAllStudentRatings } from "@/lib/firebase";
-import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel, getPetNeeds, PetNeeds } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getMasterTierInfo, getNextBadgeHint, getNextLevel, getNextShopUnlock, getShopRewardById, getThemeVisualConfig, getXPProgress, GameProfile, getLeagueForLevel, getPetNeeds, PetNeeds } from "@/lib/gamification";
 import GrowthTree from "@/components/GrowthTree";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import RewardShop from "@/components/RewardShop";
@@ -168,6 +168,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const nextShopUnlock = gameProfile ? getNextShopUnlock(gameProfile) : null;
   const nextBadgeHint = gameProfile ? getNextBadgeHint(gameProfile) : null;
   const themeVisual = getThemeVisualConfig(gameProfile?.equippedTheme || null);
+  const equippedTitleReward = getShopRewardById(gameProfile?.equippedTitle);
   const welcomeHeaderGradient = gameProfile?.equippedTheme
     ? themeVisual.buttonGradient
     : "linear-gradient(to right, rgba(59,130,246,0.92), rgba(8,145,178,0.92))";
@@ -199,6 +200,12 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow-md">
                   Добро пожаловать, {student.name}! 👋
                 </h1>
+                {equippedTitleReward && (
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white shadow-sm backdrop-blur-sm">
+                    <span>{equippedTitleReward.emoji}</span>
+                    <span>{equippedTitleReward.name}</span>
+                  </div>
+                )}
                 <p className="text-white/95 font-medium text-sm sm:text-base mt-1 drop-shadow-sm">
                   Твоё личное учебное пространство
                 </p>
@@ -417,6 +424,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 <PetAvatar
                   petId={gameProfile.petId}
                   accessories={gameProfile.petAccessories || []}
+                  frameId={gameProfile.equippedFrame}
                   vehicleId={gameProfile.equippedVehicle}
                   backgroundId={gameProfile.equippedBackground}
                   size="lg"

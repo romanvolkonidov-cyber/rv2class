@@ -169,6 +169,9 @@ export default function TagStudentsPage() {
                           <PetAvatar
                             petId={profile.petId}
                             accessories={profile.petAccessories || []}
+                            frameId={profile.equippedFrame}
+                            vehicleId={profile.equippedVehicle}
+                            backgroundId={profile.equippedBackground}
                             size="md"
                             className="scale-105"
                           />
