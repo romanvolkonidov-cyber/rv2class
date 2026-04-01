@@ -290,25 +290,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
               </div>
             </div>
 
-            {/* Quick Actions (Shop & Rating) */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="h-12 border-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold shadow-sm"
-                onClick={() => setShowShop(true)}
-              >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                Магазин
-              </Button>
-              <Button
-                variant="outline"
-                className="h-12 border-2 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold shadow-sm"
-                onClick={() => setShowRating(true)}
-              >
-                <Trophy className="h-4 w-4 mr-2" />
-                Рейтинг
-              </Button>
-            </div>
+
             {gameProfile && (
               <div className="flex flex-col items-center pt-6 border-t border-slate-200 mt-8">
                 <h3 className="text-sm font-bold text-gray-700 mb-3">🌳 Дерево знаний</h3>
@@ -355,7 +337,19 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 >
                   {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                     <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
-                      💩{i === 0 && <span className="absolute -top-6 -right-2 text-2xl animate-pulse">🤢</span>}
+                      💩{i === 0 && (
+                        <span 
+                          className="absolute -top-6 -right-2 text-2xl animate-pulse cursor-help"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPetPhrase("Плохо пахнет! Нужно убраться! 🧹");
+                            triggerPetReaction("🤢");
+                          }}
+                          title="Очень плохо пахнет!"
+                        >
+                          🤢
+                        </span>
+                      )}
                     </span>
                   ))}
                 </button>
@@ -444,14 +438,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
         />
       )}
 
-      {/* Leaderboard Modal */}
-      {gameProfile && (
-        <StudentLeaderboard 
-          isOpen={showRating}
-          onClose={() => setShowRating(false)}
-          currentStudentId={student.id}
-        />
-      )}
+
 
       {/* Glow animation */}
       <style jsx global>{`

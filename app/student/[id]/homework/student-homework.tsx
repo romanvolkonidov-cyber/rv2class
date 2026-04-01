@@ -1241,7 +1241,19 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               >
                 {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                   <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
-                    💩{i === 0 && <span className="absolute -top-6 -right-2 text-2xl animate-pulse">🤢</span>}
+                    💩{i === 0 && (
+                      <span 
+                        className="absolute -top-6 -right-2 text-2xl animate-pulse cursor-help"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPetPhrase("Плохо пахнет! Нужно убраться! 🧹");
+                          triggerPetReaction("🤢");
+                        }}
+                        title="Очень плохо пахнет!"
+                      >
+                        🤢
+                      </span>
+                    )}
                   </span>
                 ))}
               </button>
