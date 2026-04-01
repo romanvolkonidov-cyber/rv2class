@@ -34,6 +34,8 @@ import { getGameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, Gam
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
 import PetAvatar from "@/components/PetAvatar";
+import PetCarePopover from "@/components/PetCarePopover";
+import RewardShop from "@/components/RewardShop";
 
 // Light theme to match the app
 const lightTheme = createTheme({
@@ -106,6 +108,8 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
+  const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | "thirst" | null>(null);
+  const [showShop, setShowShop] = useState(false);
 
   const normalizeAnswerText = (value: string | number | null | undefined) =>
     String(value ?? "")
@@ -131,7 +135,8 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
     }
     
     if (hasNeeds) {
-      setPetPhrase("Позаботься обо мне на главной! 🥺");
+      setPetPhrase("Купи мне что-нибудь! 🥺");
+      setTimeout(() => setShowShop(true), 1500); // Open shop automatically after a moment
     } else {
       setPetPhrase("Я очень счастлив! 💖");
       triggerPetReaction("🤩");
@@ -948,29 +953,62 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             )}
             {/* Pet Care Need Emojis */}
             {petNeeds.poopCount > 0 && (
-              <div
-                className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform animate-bounce pointer-events-none"
+              <button
+                type="button"
+                onClick={() => setActiveCareNeed(activeCareNeed === "poop" ? null : "poop")}
+                className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer animate-bounce"
                 style={{ animationDuration: '2s' }}
+                title="Убрать!"
               >
                 {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                   <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
                 ))}
-              </div>
+              </button>
             )}
             {petNeeds.isHungry && (
-              <div className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+              <button
+                type="button"
+                onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
+                className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                title="Покормить!"
+              >
                 <span className="animate-pulse">🍽️</span>
-              </div>
+              </button>
             )}
             {petNeeds.isBored && (
-              <div className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+              <button
+                type="button"
+                onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
+                className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                title="Поиграть!"
+              >
                 <span className="animate-pulse">😐</span>
-              </div>
+              </button>
             )}
             {petNeeds.isThirsty && (
-              <div className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+              <button
+                type="button"
+                onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
+                className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                title="Попоить!"
+              >
                 <span className="animate-pulse drop-shadow-md">💧</span>
-              </div>
+              </button>
+            )}
+
+            {/* Care Popover */}
+            {activeCareNeed && gameProfile && (
+              <PetCarePopover
+                needType={activeCareNeed}
+                needs={petNeeds}
+                profile={gameProfile}
+                onProfileUpdate={(updated) => setGameProfile(updated)}
+                onClose={() => setActiveCareNeed(null)}
+                onHappyReaction={(emoji) => {
+                  setPetReaction(emoji);
+                  setTimeout(() => setPetReaction(null), 3000);
+                }}
+              />
             )}
 
             <button type="button" onClick={togglePetPhrase} className="rounded-2xl relative">
@@ -1007,6 +1045,15 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         isOpen={showPets}
         onClose={() => setShowPets(false)}
       />
+
+      {gameProfile && (
+        <RewardShop
+          isOpen={showShop}
+          onClose={() => setShowShop(false)}
+          profile={gameProfile}
+          onProfileUpdate={(updated) => setGameProfile(updated)}
+        />
+      )}
     </Box>
     </ThemeProvider>
   );
