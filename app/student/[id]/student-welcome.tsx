@@ -46,6 +46,7 @@ const createFallbackProfile = (studentId: string): GameProfile => ({
   petLastCleaned: null,
   petLastFed: null,
   petLastPlayed: null,
+  petLastDrank: null,
 });
 
 export default function StudentWelcome({ student }: { student: StudentData }) {
