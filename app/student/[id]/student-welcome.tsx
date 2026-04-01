@@ -36,6 +36,8 @@ const createFallbackProfile = (studentId: string): GameProfile => ({
   equippedTheme: null,
   equippedFrame: null,
   equippedTitle: null,
+  equippedVehicle: null,
+  equippedBackground: null,
   petId: null,
   petAccessories: [],
   currentStreak: 0,
@@ -54,9 +56,9 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
   const [showShop, setShowShop] = useState(false);
   const [petReaction, setPetReaction] = useState<string | null>(null);
   const [petPhrase, setPetPhrase] = useState<string | null>(null);
-  const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | null>(null);
+  const [activeCareNeed, setActiveCareNeed] = useState<"poop" | "hunger" | "boredom" | "thirst" | null>(null);
 
-  const petNeeds: PetNeeds = gameProfile ? getPetNeeds(gameProfile) : { poopCount: 0, isHungry: false, isBored: false };
+  const petNeeds: PetNeeds = gameProfile ? getPetNeeds(gameProfile) : { poopCount: 0, isHungry: false, isBored: false, isThirsty: false };
 
   const teacherName = student.teacher || "Roman";
 
@@ -114,35 +116,21 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
   };
-  const petPhrases = [
-    "Great job!",
-    "You can do it!",
-    "Let’s learn!",
-    "Keep going!",
-    "One more step!",
-    "Nice focus!",
-    "You are smart!",
-    "Try your best!",
-    "Awesome work!",
-    "Stay curious!",
-    "You are amazing!",
-    "Let’s win today!",
-    "Small steps, big win!",
-    "You got this!",
-    "High five!",
-    "Ready to learn?",
-    "Brave and bright!",
-    "Super effort!",
-    "Keep shining!",
-    "Let’s go!"
-  ];
+  const hasNeeds = gameProfile?.petId ? (petNeeds.poopCount > 0 || petNeeds.isHungry || petNeeds.isBored || petNeeds.isThirsty) : false;
+
   const togglePetPhrase = () => {
     if (petPhrase) {
       setPetPhrase(null);
       return;
     }
-    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
-    setPetPhrase(next);
+    
+    if (hasNeeds) {
+      setPetPhrase("Купи мне что-нибудь! 🥺");
+      setTimeout(() => setShowShop(true), 1500); // Open shop automatically after a moment
+    } else {
+      setPetPhrase("Я очень счастлив! 💖");
+      triggerPetReaction("🤩");
+    }
   };
 
   const handleJoinClass = async () => {
@@ -445,6 +433,16 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                         <span className="animate-pulse">😐</span>
                       </button>
                     )}
+                    {petNeeds.isThirsty && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
+                        className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform cursor-pointer"
+                        title="Попоить!"
+                      >
+                        <span className="animate-pulse drop-shadow-md">💧</span>
+                      </button>
+                    )}
 
                     {/* Care Popover */}
                     {activeCareNeed && gameProfile && (
@@ -472,13 +470,13 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                       </div>
                     )}
                     <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
-                      <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" />
+                      <PetAvatar petId={gameProfile.petId} accessories={gameProfile.petAccessories || []} size="lg" className="scale-110" vehicleId={gameProfile.equippedVehicle} backgroundId={gameProfile.equippedBackground} />
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-3 font-medium">
-                    {petNeeds.poopCount > 0 || petNeeds.isHungry || petNeeds.isBored
+                    {hasNeeds
                       ? "Нажми на эмодзи, чтобы позаботиться!"
-                      : "Покупай аксессуары в магазине!"
+                      : "Питомцу комфортно! Можно покупать аксессуары в магазине."
                     }
                   </p>
                 </div>

@@ -6,6 +6,8 @@ interface PetAvatarProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   frameId?: string | null;
+  vehicleId?: string | null;
+  backgroundId?: string | null;
 }
 
 export const AVAILABLE_PETS = [
@@ -24,6 +26,29 @@ const sizeClasses = {
   md: "w-20 h-20 text-4xl",
   lg: "w-32 h-32 text-6xl",
   xl: "w-48 h-48 text-8xl",
+};
+
+const vehicleSizeMap = {
+  sm: "text-lg",
+  md: "text-2xl",
+  lg: "text-4xl",
+  xl: "text-6xl",
+};
+
+const VEHICLE_EMOJIS: Record<string, string> = {
+  veh_bicycle: "🚲", veh_football: "⚽", veh_basketball: "🏀", veh_skateboard: "🛹",
+  veh_guitar: "🎸", veh_scooter: "🛴", veh_gaming: "🎮", veh_tennis: "🎾",
+  veh_motorcycle: "🏍️", veh_car: "🚗", veh_sportscar: "🏎️", veh_ufo: "🛸", veh_rocket: "🚀",
+};
+
+const BACKGROUND_STYLES: Record<string, string> = {
+  bg_park:    "bg-gradient-to-b from-green-100 to-green-200 border-green-300",
+  bg_beach:   "bg-gradient-to-b from-sky-100 to-amber-100 border-sky-300",
+  bg_city:    "bg-gradient-to-b from-slate-200 to-slate-300 border-slate-400",
+  bg_space:   "bg-gradient-to-b from-indigo-900 to-purple-900 border-indigo-500",
+  bg_gaming:  "bg-gradient-to-b from-violet-200 to-fuchsia-200 border-violet-400",
+  bg_rainbow: "bg-gradient-to-br from-red-100 via-yellow-100 to-blue-100 border-pink-300",
+  bg_crystal: "bg-gradient-to-b from-cyan-100 to-teal-200 border-cyan-400",
 };
 
 const frameStyles: Record<string, string> = {
@@ -46,96 +71,107 @@ const frameDecorations: Record<string, string> = {
   frame_diamond: "💎",
 };
 
-export default function PetAvatar({ petId, accessories = [], size = "md", className = "", frameId = null }: PetAvatarProps) {
+export default function PetAvatar({ petId, accessories = [], size = "md", className = "", frameId = null, vehicleId = null, backgroundId = null }: PetAvatarProps) {
   const pet = AVAILABLE_PETS.find(p => p.id === petId) || AVAILABLE_PETS[0];
   const frameClass = frameId ? frameStyles[frameId] || "" : "";
   const frameDecoration = frameId ? frameDecorations[frameId] : null;
+  const bgClass = backgroundId ? (BACKGROUND_STYLES[backgroundId] || "") : "";
+  const petColorClass = bgClass || `${pet.color}`;
+  const vehicleEmoji = vehicleId ? VEHICLE_EMOJIS[vehicleId] : null;
 
   return (
-    <div className={`relative flex items-center justify-center rounded-3xl border-4 ${pet.color} shadow-inner ${sizeClasses[size]} ${frameClass} ${className}`}>
-      {/* Base Pet Emoji */}
-      <span className="relative z-10 transform hover:scale-110 transition-transform duration-300">
-        {pet.emoji}
-      </span>
+    <div className="flex flex-col items-center gap-1">
+      <div className={`relative flex items-center justify-center rounded-3xl border-4 ${petColorClass} shadow-inner ${sizeClasses[size]} ${frameClass} ${className}`}>
+        {/* Base Pet Emoji */}
+        <span className="relative z-10 transform hover:scale-110 transition-transform duration-300">
+          {pet.emoji}
+        </span>
 
-      {frameDecoration && (
-        <>
-          <span className="absolute -top-2 -left-1 z-30 text-lg">{frameDecoration}</span>
-          <span className="absolute -top-2 -right-1 z-30 text-lg">{frameDecoration}</span>
-          <span className="absolute -bottom-2 -left-1 z-30 text-lg">{frameDecoration}</span>
-          <span className="absolute -bottom-2 -right-1 z-30 text-lg">{frameDecoration}</span>
-        </>
-      )}
+        {frameDecoration && (
+          <>
+            <span className="absolute -top-2 -left-1 z-30 text-lg">{frameDecoration}</span>
+            <span className="absolute -top-2 -right-1 z-30 text-lg">{frameDecoration}</span>
+            <span className="absolute -bottom-2 -left-1 z-30 text-lg">{frameDecoration}</span>
+            <span className="absolute -bottom-2 -right-1 z-30 text-lg">{frameDecoration}</span>
+          </>
+        )}
 
-      {/* Accessories Overlay (Visual representation mapped from accessory IDs) */}
-      {/* NECK SLOT */}
-      {accessories.includes("acc_scarf") && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "35%" }}>
-          <span style={{ fontSize: "1em" }}>🧣</span>
-        </div>
-      )}
-      {accessories.includes("acc_bowtie") && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "40%" }}>
-          <span style={{ fontSize: "0.8em" }}>🎀</span>
-        </div>
-      )}
-      {accessories.includes("acc_diamond_chain") && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "45%" }}>
-          <span style={{ fontSize: "0.9em" }}>💎</span>
-        </div>
-      )}
+        {/* NECK SLOT */}
+        {accessories.includes("acc_scarf") && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "35%" }}>
+            <span style={{ fontSize: "1em" }}>🧣</span>
+          </div>
+        )}
+        {accessories.includes("acc_bowtie") && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "40%" }}>
+            <span style={{ fontSize: "0.8em" }}>🎀</span>
+          </div>
+        )}
+        {accessories.includes("acc_diamond_chain") && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none" style={{ top: "45%" }}>
+            <span style={{ fontSize: "0.9em" }}>💎</span>
+          </div>
+        )}
 
-      {/* FACE SLOT */}
-      {accessories.includes("acc_glasses") && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
-          <span style={{ fontSize: "1em" }}>👓</span>
-        </div>
-      )}
-      {accessories.includes("acc_shades") && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
-          <span style={{ fontSize: "1em" }}>🕶️</span>
-        </div>
-      )}
-      {accessories.includes("acc_vr_headset") && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
-          <span style={{ fontSize: "1em" }}>🥽</span>
-        </div>
-      )}
+        {/* FACE SLOT */}
+        {accessories.includes("acc_glasses") && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
+            <span style={{ fontSize: "1em" }}>👓</span>
+          </div>
+        )}
+        {accessories.includes("acc_shades") && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
+            <span style={{ fontSize: "1em" }}>🕶️</span>
+          </div>
+        )}
+        {accessories.includes("acc_vr_headset") && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ top: "5%" }}>
+            <span style={{ fontSize: "1em" }}>🥽</span>
+          </div>
+        )}
 
-      {/* HEAD SLOT */}
-      {accessories.includes("acc_cap") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-25%" }}>
-          <span style={{ fontSize: "1.1em" }}>🧢</span>
-        </div>
-      )}
-      {accessories.includes("acc_tophat") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-30%" }}>
-          <span style={{ fontSize: "1.1em" }}>🎩</span>
-        </div>
-      )}
-      {accessories.includes("acc_crown") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-30%" }}>
-          <span style={{ fontSize: "0.9em" }}>👑</span>
-        </div>
-      )}
-      {accessories.includes("acc_golden_crown") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-35%" }}>
-          <span style={{ fontSize: "1.1em" }}>🏆</span>
-        </div>
-      )}
-      {accessories.includes("acc_headphones") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-5%" }}>
-          <span style={{ fontSize: "1.2em" }}>🎧</span>
-        </div>
-      )}
-      {accessories.includes("acc_pilot") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-20%" }}>
-          <span style={{ fontSize: "1em" }}>🛩️</span>
-        </div>
-      )}
-      {accessories.includes("acc_astronaut") && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-10%" }}>
-          <span style={{ fontSize: "1.4em", opacity: 0.7 }}>🚀</span>
+        {/* HEAD SLOT */}
+        {accessories.includes("acc_cap") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-25%" }}>
+            <span style={{ fontSize: "1.1em" }}>🧢</span>
+          </div>
+        )}
+        {accessories.includes("acc_tophat") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-30%" }}>
+            <span style={{ fontSize: "1.1em" }}>🎩</span>
+          </div>
+        )}
+        {accessories.includes("acc_crown") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-30%" }}>
+            <span style={{ fontSize: "0.9em" }}>👑</span>
+          </div>
+        )}
+        {accessories.includes("acc_golden_crown") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-35%" }}>
+            <span style={{ fontSize: "1.1em" }}>🏆</span>
+          </div>
+        )}
+        {accessories.includes("acc_headphones") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-5%" }}>
+            <span style={{ fontSize: "1.2em" }}>🎧</span>
+          </div>
+        )}
+        {accessories.includes("acc_pilot") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-20%" }}>
+            <span style={{ fontSize: "1em" }}>🛩️</span>
+          </div>
+        )}
+        {accessories.includes("acc_astronaut") && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none" style={{ top: "-10%" }}>
+            <span style={{ fontSize: "1.4em", opacity: 0.7 }}>🚀</span>
+          </div>
+        )}
+      </div>
+
+      {/* Vehicle shown below the pet */}
+      {vehicleEmoji && (
+        <div className={`${vehicleSizeMap[size]} leading-none -mt-1 drop-shadow-sm`}>
+          {vehicleEmoji}
         </div>
       )}
     </div>

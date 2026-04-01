@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchStudentHomework, fetchHomeworkReports, fetchQuestionsForHomework, fetchStudentRatings, fetchAllStudentRatings, HomeworkAssignment, HomeworkReport, Question } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import StudentLeaderboard from "@/components/StudentLeaderboard";
+import StudentsPetsModal from "@/components/StudentsPetsModal";
 import { 
   ThemeProvider,
   createTheme,
@@ -100,6 +101,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const [studentRating, setStudentRating] = useState<any>(null);
   const [loadingRating, setLoadingRating] = useState(true);
   const [showRatingDetails, setShowRatingDetails] = useState(false);
+  const [showPets, setShowPets] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [gameProfile, setGameProfile] = useState<GameProfile | null>(null);
   const [petReaction, setPetReaction] = useState<string | null>(null);
@@ -480,6 +482,23 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                   }}
                 >
                   Рейтинг учеников
+                </MuiButton>
+
+                {/* Pets Button */}
+                <MuiButton
+                  variant="contained"
+                  onClick={() => setShowPets(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #a855f7 0%, #d946ef 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #9333ea 0%, #c026d3 100%)',
+                    },
+                    fontWeight: 700,
+                    px: 2,
+                    py: 1,
+                  }}
+                >
+                  🐾 Животные учеников
                 </MuiButton>
                 
                 {/* Rating Badge */}
@@ -967,6 +986,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         isOpen={showRatingDetails}
         onClose={() => setShowRatingDetails(false)}
         currentStudentId={studentId}
+      />
+
+      <StudentsPetsModal
+        isOpen={showPets}
+        onClose={() => setShowPets(false)}
       />
     </Box>
     </ThemeProvider>

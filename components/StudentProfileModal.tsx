@@ -75,6 +75,8 @@ export default function StudentProfileModal({
                 accessories={profile.petAccessories} 
                 size="lg" 
                 className="rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50"
+                vehicleId={profile.equippedVehicle}
+                backgroundId={profile.equippedBackground}
               />
             ) : (
               <div className="w-32 h-32 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">

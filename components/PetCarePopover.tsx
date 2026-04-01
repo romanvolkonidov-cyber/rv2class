@@ -8,13 +8,15 @@ import {
   feedPet,
   playWithPet,
   PET_FOODS,
+  PET_DRINKS,
   PET_TOYS,
   getHappyEmoji,
   GameProfile,
+  giveDrinkToPet,
 } from "@/lib/gamification";
 import { playSound } from "@/lib/audioSystem";
 
-type NeedType = "poop" | "hunger" | "boredom";
+type NeedType = "poop" | "hunger" | "boredom" | "thirst";
 
 interface PetCarePopoverProps {
   needType: NeedType;
@@ -66,6 +68,21 @@ export default function PetCarePopover({
     setLoading(false);
   };
 
+  const handleDrink = async (drinkId: string) => {
+    setLoading(true);
+    setError(null);
+    const result = await giveDrinkToPet(profile.studentId, drinkId);
+    if (result.success && result.profile) {
+      onProfileUpdate(result.profile);
+      playSound("petCare");
+      onHappyReaction(getHappyEmoji(result.happiness || 1));
+      onClose();
+    } else {
+      setError(result.error || "Ошибка");
+    }
+    setLoading(false);
+  };
+
   const handlePlay = async (toyId: string) => {
     setLoading(true);
     setError(null);
@@ -86,11 +103,12 @@ export default function PetCarePopover({
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         {/* Header */}
         <div className={`px-4 py-3 flex items-center justify-between ${
-          needType === "poop" ? "bg-amber-50" : needType === "hunger" ? "bg-orange-50" : "bg-blue-50"
+          needType === "poop" ? "bg-amber-50" : needType === "hunger" ? "bg-orange-50" : needType === "thirst" ? "bg-cyan-50" : "bg-blue-50"
         }`}>
           <span className="text-sm font-bold text-slate-800">
             {needType === "poop" && `💩 Убрать за питомцем? (${needs.poopCount})`}
             {needType === "hunger" && "🍽️ Питомец голоден!"}
+            {needType === "thirst" && "💧 Питомец хочет пить!"}
             {needType === "boredom" && "😐 Питомцу скучно!"}
           </span>
           <button
@@ -141,6 +159,28 @@ export default function PetCarePopover({
                   </span>
                   <span className="flex items-center gap-1 text-xs font-bold text-orange-700 bg-orange-100 rounded-full px-2 py-1">
                     <Coins className="h-3 w-3" /> {food.cost}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {needType === "thirst" && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-slate-500 font-medium px-1">Дай попить:</p>
+              {PET_DRINKS.map(drink => (
+                <button
+                  key={drink.id}
+                  onClick={() => handleDrink(drink.id)}
+                  disabled={loading || profile.shopCoins < drink.cost}
+                  className="w-full flex items-center justify-between bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 rounded-xl px-4 py-2.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">{drink.emoji}</span>
+                    <span className="text-sm font-semibold text-slate-800">{drink.name}</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-xs font-bold text-cyan-700 bg-cyan-100 rounded-full px-2 py-1">
+                    <Coins className="h-3 w-3" /> {drink.cost}
                   </span>
                 </button>
               ))}

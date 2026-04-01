@@ -236,7 +236,7 @@ export interface ShopReward {
   emoji: string;
   description: string;
   cost: number;
-  type: "theme" | "frame" | "title" | "accessory";
+  type: "theme" | "frame" | "title" | "accessory" | "vehicle" | "background";
   slot?: "head" | "face" | "neck";
 }
 
@@ -290,6 +290,30 @@ export const SHOP_REWARDS: ShopReward[] = [
   { id: "acc_scarf",       name: "Warm Scarf",       emoji: "🧣", description: "Cozy for winter",          cost: 20,  type: "accessory", slot: "neck" },
   { id: "acc_bowtie",      name: "Red Bowtie",       emoji: "🎀", description: "Sharp and snazzy",         cost: 20,  type: "accessory", slot: "neck" },
   { id: "acc_diamond_chain",name: "Diamond Chain",   emoji: "💎", description: "Massive bling-bling",      cost: 5000, type: "accessory", slot: "neck" },
+
+  // --- VEHICLES & HOBBIES ---
+  { id: "veh_bicycle",     name: "Велосипед",        emoji: "🚲", description: "Крути педали!",            cost: 20,   type: "vehicle" },
+  { id: "veh_football",    name: "Футбольный мяч",   emoji: "⚽", description: "Гооол!",                  cost: 20,   type: "vehicle" },
+  { id: "veh_basketball",  name: "Баскетбольный мяч",emoji: "🏀", description: "Бросок сверху!",           cost: 25,   type: "vehicle" },
+  { id: "veh_skateboard",  name: "Скейтборд",        emoji: "🛹", description: "Кикфлип!",                cost: 30,   type: "vehicle" },
+  { id: "veh_guitar",      name: "Гитара",           emoji: "🎸", description: "Рок-звезда!",              cost: 50,   type: "vehicle" },
+  { id: "veh_scooter",     name: "Самокат",          emoji: "🛴", description: "Быстро и стильно",        cost: 50,   type: "vehicle" },
+  { id: "veh_gaming",      name: "Игровая приставка",emoji: "🎮", description: "GG, EZ",                 cost: 75,   type: "vehicle" },
+  { id: "veh_tennis",      name: "Теннисная ракетка",emoji: "🎾", description: "Эйс!",                   cost: 40,   type: "vehicle" },
+  { id: "veh_motorcycle",  name: "Мотоцикл",         emoji: "🏍️", description: "Рёв мотора!",              cost: 150,  type: "vehicle" },
+  { id: "veh_car",         name: "Автомобиль",       emoji: "🚗", description: "Первая тачка",            cost: 300,  type: "vehicle" },
+  { id: "veh_sportscar",   name: "Спорткар",         emoji: "🏎️", description: "Нужна скорость!",          cost: 1000, type: "vehicle" },
+  { id: "veh_ufo",         name: "НЛО",              emoji: "🛸", description: "Прилетел учиться",        cost: 2500, type: "vehicle" },
+  { id: "veh_rocket",      name: "Ракета",           emoji: "🚀", description: "К звёздам!",               cost: 5000, type: "vehicle" },
+
+  // --- BACKGROUNDS ---
+  { id: "bg_park",         name: "Парк",             emoji: "🌳", description: "Уютная зелень",           cost: 30,   type: "background" },
+  { id: "bg_beach",        name: "Пляж",             emoji: "🏖️", description: "Солнце и волны",           cost: 50,   type: "background" },
+  { id: "bg_city",         name: "Город",            emoji: "🏙️", description: "Огни большого города",    cost: 75,   type: "background" },
+  { id: "bg_space",        name: "Космос",           emoji: "🌌", description: "Бескрайняя вселенная",    cost: 200,  type: "background" },
+  { id: "bg_gaming",       name: "Игровая комната",  emoji: "🕹️", description: "RGB подсветка!",           cost: 300,  type: "background" },
+  { id: "bg_rainbow",      name: "Радуга",           emoji: "🌈", description: "Все цвета мира",          cost: 500,  type: "background" },
+  { id: "bg_crystal",      name: "Кристальная пещера",emoji: "💎", description: "Сверкающие самоцветы",    cost: 2000, type: "background" },
 ];
 
 // ─── Game Profile ───────────────────────────────────────────────────
@@ -309,6 +333,8 @@ export interface GameProfile {
   equippedTheme: string | null;
   equippedFrame: string | null;
   equippedTitle: string | null;
+  equippedVehicle: string | null;
+  equippedBackground: string | null;
   
   // Phase 2 Additions
   petId: string | null;
@@ -321,6 +347,7 @@ export interface GameProfile {
   petLastCleaned: string | null;
   petLastFed: string | null;
   petLastPlayed: string | null;
+  petLastDrank: string | null;
 
   // Progress tracker to prevent re-answering
   progress?: Record<string, {
@@ -344,6 +371,8 @@ const DEFAULT_PROFILE: Omit<GameProfile, "studentId"> = {
   equippedTheme: null,
   equippedFrame: null,
   equippedTitle: null,
+  equippedVehicle: null,
+  equippedBackground: null,
   petId: null,
   petAccessories: [],
   currentStreak: 0,
@@ -352,6 +381,7 @@ const DEFAULT_PROFILE: Omit<GameProfile, "studentId"> = {
   petLastCleaned: null,
   petLastFed: null,
   petLastPlayed: null,
+  petLastDrank: null,
 };
 
 // ─── Firebase Operations ────────────────────────────────────────────
@@ -592,7 +622,7 @@ export async function purchaseReward(
 export async function equipReward(
   studentId: string,
   rewardId: string | null,
-  type: "theme" | "frame" | "title" | "accessory"
+  type: "theme" | "frame" | "title" | "accessory" | "vehicle" | "background"
 ): Promise<void> {
   const profile = await getGameProfile(studentId);
   const updates: Partial<GameProfile> = {};
@@ -600,6 +630,8 @@ export async function equipReward(
   if (type === "theme") updates.equippedTheme = rewardId;
   if (type === "frame") updates.equippedFrame = rewardId;
   if (type === "title") updates.equippedTitle = rewardId;
+  if (type === "vehicle") updates.equippedVehicle = rewardId;
+  if (type === "background") updates.equippedBackground = rewardId;
   
   if (type === "accessory") {
     if (!rewardId) return;
@@ -783,10 +815,11 @@ export interface PetNeeds {
   poopCount: number; // 0-5
   isHungry: boolean;
   isBored: boolean;
+  isThirsty: boolean;
 }
 
 export function getPetNeeds(profile: GameProfile): PetNeeds {
-  if (!profile.petId) return { poopCount: 0, isHungry: false, isBored: false };
+  if (!profile.petId) return { poopCount: 0, isHungry: false, isBored: false, isThirsty: false };
 
   const now = Date.now();
 
@@ -805,13 +838,24 @@ export function getPetNeeds(profile: GameProfile): PetNeeds {
   const playedElapsed = lastPlayed > 0 ? now - lastPlayed : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
   const isBored = playedElapsed >= PET_CARE_CYCLE_MS;
 
-  return { poopCount, isHungry, isBored };
+  // Thirst: binary, true if > 3 days since last drank
+  const lastDrank = profile.petLastDrank ? new Date(profile.petLastDrank).getTime() : 0;
+  const drankElapsed = lastDrank > 0 ? now - lastDrank : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
+  const isThirsty = drankElapsed >= PET_CARE_CYCLE_MS;
+
+  return { poopCount, isHungry, isBored, isThirsty };
 }
 
 export const PET_FOODS = [
   { id: "food_apple", name: "Яблоко", emoji: "🍎", cost: 1, happiness: 1 },
   { id: "food_pizza", name: "Пицца", emoji: "🍕", cost: 2, happiness: 2 },
   { id: "food_cake",  name: "Торт",  emoji: "🎂", cost: 3, happiness: 3 },
+];
+
+export const PET_DRINKS = [
+  { id: "drink_water", name: "Вода", emoji: "💧", cost: 1, happiness: 1 },
+  { id: "drink_milk",  name: "Молоко", emoji: "🥛", cost: 2, happiness: 2 },
+  { id: "drink_juice", name: "Сок", emoji: "🧃", cost: 3, happiness: 3 },
 ];
 
 export const PET_TOYS = [
@@ -880,6 +924,28 @@ export async function playWithPet(studentId: string, toyId: string): Promise<{ s
     return { success: true, profile, happiness: toy.happiness };
   } catch (err) {
     console.error("Error playing with pet:", err);
+    return { success: false, error: "Ошибка сервера" };
+  }
+}
+
+export async function giveDrinkToPet(studentId: string, drinkId: string): Promise<{ success: boolean; error?: string; profile?: GameProfile; happiness?: number }> {
+  const drink = PET_DRINKS.find(d => d.id === drinkId);
+  if (!drink) return { success: false, error: "Напиток не найден" };
+  
+  try {
+    const profile = await getGameProfile(studentId);
+    if (profile.shopCoins < drink.cost) return { success: false, error: `Недостаточно монет! Нужно ${drink.cost} 🪙` };
+    
+    profile.shopCoins -= drink.cost;
+    profile.petLastDrank = new Date().toISOString();
+    
+    await updateGameProfile(studentId, {
+      shopCoins: profile.shopCoins,
+      petLastDrank: profile.petLastDrank,
+    });
+    return { success: true, profile, happiness: drink.happiness };
+  } catch (err) {
+    console.error("Error giving drink to pet:", err);
     return { success: false, error: "Ошибка сервера" };
   }
 }

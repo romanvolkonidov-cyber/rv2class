@@ -39,6 +39,8 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
     if (reward.type === "theme") currentEquipped = profile.equippedTheme;
     else if (reward.type === "frame") currentEquipped = profile.equippedFrame;
     else if (reward.type === "title") currentEquipped = profile.equippedTitle;
+    else if (reward.type === "vehicle") currentEquipped = profile.equippedVehicle;
+    else if (reward.type === "background") currentEquipped = profile.equippedBackground;
     else if (reward.type === "accessory") currentEquipped = (profile.petAccessories || []).includes(reward.id) ? reward.id : null;
 
     const newValue = currentEquipped === reward.id ? null : reward.id;
@@ -50,6 +52,8 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
     if (reward.type === "theme") updated.equippedTheme = newValue;
     if (reward.type === "frame") updated.equippedFrame = newValue;
     if (reward.type === "title") updated.equippedTitle = newValue;
+    if (reward.type === "vehicle") updated.equippedVehicle = newValue;
+    if (reward.type === "background") updated.equippedBackground = newValue;
     if (reward.type === "accessory") {
       const currentAccs = [...(updated.petAccessories || [])];
       if (newValue === null) {
@@ -75,16 +79,20 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
   };
 
   const groupedRewards: Record<string, ShopReward[]> = {
-    theme: SHOP_REWARDS.filter(r => r.type === "theme"),
     accessory: SHOP_REWARDS.filter(r => r.type === "accessory"),
+    vehicle: SHOP_REWARDS.filter(r => r.type === "vehicle"),
+    background: SHOP_REWARDS.filter(r => r.type === "background"),
     frame: SHOP_REWARDS.filter(r => r.type === "frame"),
+    theme: SHOP_REWARDS.filter(r => r.type === "theme"),
     title: SHOP_REWARDS.filter(r => r.type === "title"),
   };
 
   const typeLabels: Record<string, string> = {
-    theme: "🎨 Темы",
     accessory: "🐾 Аксессуары питомца",
+    vehicle: "🚗 Транспорт и хобби",
+    background: "🌅 Фоны",
     frame: "✨ Рамки",
+    theme: "🎨 Темы",
     title: "📝 Титулы",
   };
   const slotLabels: Record<NonNullable<ShopReward["slot"]>, string> = {
@@ -94,6 +102,14 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
   };
   const previewReward = previewRewardId ? SHOP_REWARDS.find(r => r.id === previewRewardId) || null : null;
   const previewPetId = profile.petId || "pet_fox";
+  const previewVehicle = (() => {
+    if (previewReward?.type === "vehicle") return previewReward.id;
+    return profile.equippedVehicle;
+  })();
+  const previewBackground = (() => {
+    if (previewReward?.type === "background") return previewReward.id;
+    return profile.equippedBackground;
+  })();
   const previewAccessories = (() => {
     const current = [...(profile.petAccessories || [])];
     if (!previewReward || previewReward.type !== "accessory" || !previewReward.slot) return current;
@@ -139,25 +155,29 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
           </div>
         )}
 
-        {/* Content */}
-        <div className="overflow-y-auto p-4 max-h-[65vh] space-y-6">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <PetAvatar petId={previewPetId} accessories={previewAccessories} size="md" />
-              <div className="text-center sm:text-left">
-                <div className="text-sm font-bold text-gray-800">Примерка питомца</div>
-                <div className="text-xs text-gray-600 mt-1">
-                  Наведи на предмет, чтобы увидеть, как он будет выглядеть.
-                </div>
-                {previewReward && (
-                  <div className="mt-2 text-xs font-semibold text-amber-700">
-                    Предпросмотр: {previewReward.emoji} {previewReward.name}
+        {/* Scrollable content with sticky preview inside */}
+        <div className="overflow-y-auto max-h-[65vh]">
+          {/* Sticky Pet Preview */}
+          <div className="sticky top-0 z-10 p-4 pb-2 bg-white">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/95 backdrop-blur-lg p-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <PetAvatar petId={previewPetId} accessories={previewAccessories} size="md" vehicleId={previewVehicle} backgroundId={previewBackground} />
+                <div className="text-center sm:text-left">
+                  <div className="text-sm font-bold text-gray-800">Примерка питомца</div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Наведи на предмет, чтобы увидеть, как он будет выглядеть.
                   </div>
-                )}
+                  {previewReward && (
+                    <div className="mt-2 text-xs font-semibold text-amber-700">
+                      Предпросмотр: {previewReward.emoji} {previewReward.name}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
+          <div className="p-4 pt-2 space-y-6">
           {Object.entries(groupedRewards).map(([type, rewards]) => (
             <div key={type}>
               <h3 className="text-lg font-bold text-gray-800 mb-3">{typeLabels[type]}</h3>
@@ -171,6 +191,8 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
                     (reward.type === "theme" && profile.equippedTheme === reward.id) ||
                     (reward.type === "frame" && profile.equippedFrame === reward.id) ||
                     (reward.type === "title" && profile.equippedTitle === reward.id) ||
+                    (reward.type === "vehicle" && profile.equippedVehicle === reward.id) ||
+                    (reward.type === "background" && profile.equippedBackground === reward.id) ||
                     (reward.type === "accessory" && (profile.petAccessories || []).includes(reward.id));
                   const canAfford = profile.shopCoins >= reward.cost;
 
@@ -245,6 +267,7 @@ export default function RewardShop({ isOpen, onClose, profile, onProfileUpdate }
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
     </div>

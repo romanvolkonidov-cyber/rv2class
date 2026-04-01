@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trophy, Star, Medal, TrendingUp } from 'lucide-react';
 import { fetchAllStudentRatings } from '@/lib/firebase';
-import { getGameProfile, getLevelForXP, getLeagueForLevel, LeagueInfo } from '@/lib/gamification';
+import { getGameProfile, getLevelForXP, getLeagueForLevel, LeagueInfo, LEAGUES } from '@/lib/gamification';
 import StudentProfileModal from './StudentProfileModal';
 
 interface StudentRating {
@@ -120,12 +120,8 @@ const StudentLeaderboard: React.FC<StudentLeaderboardProps> = ({
     leaguesMap.get(r.league.id)!.push(r);
   });
   
-  // Sort leagues descending by maxLevel so highest league is at the top
-  const sortedLeagueIds = Array.from(leaguesMap.keys()).sort((a, b) => {
-    const minA = leaguesMap.get(a)?.[0]?.league?.maxLevel || 0;
-    const minB = leaguesMap.get(b)?.[0]?.league?.maxLevel || 0;
-    return minB - minA;
-  });
+  // Display all leagues from highest to lowest
+  const displayLeagues = [...LEAGUES].reverse();
 
   if (!isOpen) return null;
 
@@ -180,9 +176,9 @@ const StudentLeaderboard: React.FC<StudentLeaderboardProps> = ({
                 <p className="text-gray-600 text-sm">Ученики разделены по лигам на основе их уровня XP</p>
               </div>
 
-              {sortedLeagueIds.map(leagueId => {
+              {displayLeagues.map(leagueInfo => {
+                const leagueId = leagueInfo.id;
                 const leagueRatings = leaguesMap.get(leagueId) || [];
-                const leagueInfo = leagueRatings[0].league;
                 
                 return (
                   <div key={leagueId} className="mb-8">
@@ -198,15 +194,20 @@ const StudentLeaderboard: React.FC<StudentLeaderboardProps> = ({
                     </div>
 
                     <div className="space-y-3">
-                      {leagueRatings.map((rating, index) => {
-                        const isCurrentStudent = rating.studentId === currentStudentId;
-                        // Within a league, rank #1 gets gold badge, #2 silver, #3 bronze
-                        const localRank = index + 1;
-                        const medalEmoji = getMedalEmoji(localRank);
+                      {leagueRatings.length === 0 ? (
+                        <div className="bg-white/40 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
+                          Пока никто не достиг этой лиги
+                        </div>
+                      ) : (
+                        leagueRatings.map((rating, index) => {
+                          const isCurrentStudent = rating.studentId === currentStudentId;
+                          // Within a league, rank #1 gets gold badge, #2 silver, #3 bronze
+                          const localRank = index + 1;
+                          const medalEmoji = getMedalEmoji(localRank);
 
-                        return (
-                          <div 
-                            key={rating.studentId} 
+                          return (
+                            <div 
+                              key={rating.studentId} 
                             className={`${getCardStyle(localRank, isCurrentStudent)} cursor-pointer group/row`}
                             onClick={() => setSelectedStudent({ id: rating.studentId, name: rating.studentName })}
                           >
@@ -256,7 +257,8 @@ const StudentLeaderboard: React.FC<StudentLeaderboardProps> = ({
                             </div>
                           </div>
                         );
-                      })}
+                      })
+                      )}
                     </div>
                   </div>
                 );
