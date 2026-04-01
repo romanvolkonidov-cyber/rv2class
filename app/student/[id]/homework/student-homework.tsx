@@ -30,7 +30,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { BookOpen, Loader2, Trophy, X, Check, Star, TrendingUp, XCircle, Zap, Coins } from "lucide-react";
-import { getGameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, GameProfile } from "@/lib/gamification";
+import { getGameProfile, getLevelForXP, getThemeVisualConfig, getXPProgress, GameProfile, getPetNeeds, PetNeeds } from "@/lib/gamification";
 import BadgeDisplay from "@/components/BadgeDisplay";
 import PetSelectionModal from "@/components/PetSelectionModal";
 import PetAvatar from "@/components/PetAvatar";
@@ -121,35 +121,21 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
     setPetReaction(emoji);
     setTimeout(() => setPetReaction(null), 2000);
   };
-  const petPhrases = [
-    "Great job!",
-    "You can do it!",
-    "Let’s learn!",
-    "Keep going!",
-    "One more step!",
-    "Nice focus!",
-    "You are smart!",
-    "Try your best!",
-    "Awesome work!",
-    "Stay curious!",
-    "You are amazing!",
-    "Let’s win today!",
-    "Small steps, big win!",
-    "You got this!",
-    "High five!",
-    "Ready to learn?",
-    "Brave and bright!",
-    "Super effort!",
-    "Keep shining!",
-    "Let’s go!"
-  ];
+  const petNeeds: PetNeeds = gameProfile ? getPetNeeds(gameProfile) : { poopCount: 0, isHungry: false, isBored: false, isThirsty: false };
+  const hasNeeds = gameProfile?.petId ? (petNeeds.poopCount > 0 || petNeeds.isHungry || petNeeds.isBored || petNeeds.isThirsty) : false;
+
   const togglePetPhrase = () => {
     if (petPhrase) {
       setPetPhrase(null);
       return;
     }
-    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
-    setPetPhrase(next);
+    
+    if (hasNeeds) {
+      setPetPhrase("Позаботься обо мне на главной! 🥺");
+    } else {
+      setPetPhrase("Я очень счастлив! 💖");
+      triggerPetReaction("🤩");
+    }
   };
 
   useEffect(() => {
@@ -960,10 +946,39 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                 {petPhrase}
               </div>
             )}
-            <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
+            {/* Pet Care Need Emojis */}
+            {petNeeds.poopCount > 0 && (
+              <div
+                className="absolute -bottom-2 -left-6 z-30 text-lg hover:scale-125 transition-transform animate-bounce pointer-events-none"
+                style={{ animationDuration: '2s' }}
+              >
+                {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
+                  <span key={i} className="inline-block" style={{ marginLeft: i > 0 ? '-4px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>💩</span>
+                ))}
+              </div>
+            )}
+            {petNeeds.isHungry && (
+              <div className="absolute -top-4 -right-5 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+                <span className="animate-pulse">🍽️</span>
+              </div>
+            )}
+            {petNeeds.isBored && (
+              <div className="absolute -top-4 -left-5 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+                <span className="animate-pulse">😐</span>
+              </div>
+            )}
+            {petNeeds.isThirsty && (
+              <div className="absolute bottom-2 -right-6 z-30 text-lg hover:scale-125 transition-transform pointer-events-none">
+                <span className="animate-pulse drop-shadow-md">💧</span>
+              </div>
+            )}
+
+            <button type="button" onClick={togglePetPhrase} className="rounded-2xl relative">
               <PetAvatar
                 petId={gameProfile.petId}
                 accessories={gameProfile.petAccessories || []}
+                vehicleId={gameProfile.equippedVehicle}
+                backgroundId={gameProfile.equippedBackground}
                 size="lg"
                 className="scale-110 shadow-xl"
               />
