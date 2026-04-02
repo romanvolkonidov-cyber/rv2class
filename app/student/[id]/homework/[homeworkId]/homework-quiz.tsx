@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHomework, submitHomeworkAnswers, fetchHomeworkReports, fetchAllStudentRatings, Question, HomeworkAssignment } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,69 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
   const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
   const [studentGlobalRank, setStudentGlobalRank] = useState<number | null>(null);
   const [equippedTheme, setEquippedTheme] = useState<string | null>(null);
+
+  // Draggable pet state
+  const [petPosition, setPetPosition] = useState<{ x: number; y: number } | null>(null);
+  const petDragRef = useRef<{
+    isDragging: boolean;
+    startX: number;
+    startY: number;
+    startPosX: number;
+    startPosY: number;
+    hasMoved: boolean;
+  }>({ isDragging: false, startX: 0, startY: 0, startPosX: 0, startPosY: 0, hasMoved: false });
+  const petContainerRef = useRef<HTMLDivElement>(null);
+
+  const getPetDefaultPosition = useCallback(() => {
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    return {
+      x: window.innerWidth - 160,
+      y: window.innerHeight - 180,
+    };
+  }, []);
+
+  // Initialize pet position on mount or when quizPet becomes available
+  useEffect(() => {
+    if (quizPet && !petPosition) {
+      setPetPosition(getPetDefaultPosition());
+    }
+  }, [quizPet, petPosition, getPetDefaultPosition]);
+
+  const handlePetPointerDown = useCallback((e: React.PointerEvent) => {
+    const pos = petPosition || getPetDefaultPosition();
+    petDragRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: pos.x,
+      startPosY: pos.y,
+      hasMoved: false,
+    };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }, [petPosition, getPetDefaultPosition]);
+
+  const handlePetPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!petDragRef.current.isDragging) return;
+    const dx = e.clientX - petDragRef.current.startX;
+    const dy = e.clientY - petDragRef.current.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      petDragRef.current.hasMoved = true;
+    }
+    const newX = Math.max(0, Math.min(window.innerWidth - 140, petDragRef.current.startPosX + dx));
+    const newY = Math.max(0, Math.min(window.innerHeight - 160, petDragRef.current.startPosY + dy));
+    setPetPosition({ x: newX, y: newY });
+  }, []);
+
+  const handlePetPointerUp = useCallback((e: React.PointerEvent) => {
+    const wasDragging = petDragRef.current.hasMoved;
+    petDragRef.current.isDragging = false;
+    petDragRef.current.hasMoved = false;
+    if (wasDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, []);
 
   // Timer
   useEffect(() => {
@@ -627,8 +690,22 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
             </CardContent>
           </Card>
         </div>
-        {quizPet && (
-          <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40 pointer-events-none">
+        {quizPet && petPosition && (
+          <div
+            ref={petContainerRef}
+            className="fixed z-40 select-none"
+            style={{
+              left: petPosition.x,
+              top: petPosition.y,
+              touchAction: 'none',
+              cursor: petDragRef.current.isDragging ? 'grabbing' : 'grab',
+              transition: petDragRef.current.isDragging ? 'none' : 'filter 0.2s ease',
+              filter: petDragRef.current.isDragging ? 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' : 'none',
+            }}
+            onPointerDown={handlePetPointerDown}
+            onPointerMove={handlePetPointerMove}
+            onPointerUp={handlePetPointerUp}
+          >
             <div className="relative">
               {petReaction && (
                 <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
@@ -930,8 +1007,22 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
         }
         .animate-shake { animation: shake 0.5s ease-in-out; }
       `}</style>
-      {quizPet && (
-        <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
+      {quizPet && petPosition && (
+        <div
+          ref={petContainerRef}
+          className="fixed z-40 select-none"
+          style={{
+            left: petPosition.x,
+            top: petPosition.y,
+            touchAction: 'none',
+            cursor: petDragRef.current.isDragging ? 'grabbing' : 'grab',
+            transition: petDragRef.current.isDragging ? 'none' : 'filter 0.2s ease',
+            filter: petDragRef.current.isDragging ? 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' : 'none',
+          }}
+          onPointerDown={handlePetPointerDown}
+          onPointerMove={handlePetPointerMove}
+          onPointerUp={handlePetPointerUp}
+        >
           <div className="relative">
             {petReaction && (
               <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
@@ -946,7 +1037,16 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                 {petPhrase}
               </div>
             )}
-            <button type="button" onClick={togglePetPhrase} className="rounded-2xl">
+            <button
+              type="button"
+              onClick={(e) => {
+                if (!petDragRef.current.hasMoved) {
+                  togglePetPhrase();
+                }
+              }}
+              className="rounded-2xl"
+              style={{ pointerEvents: 'auto' }}
+            >
               <PetAvatar
                 petId={quizPet.petId}
                 accessories={quizPet.accessories}
