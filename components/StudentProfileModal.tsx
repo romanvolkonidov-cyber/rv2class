@@ -69,7 +69,7 @@ export default function StudentProfileModal({
           </button>
           
           {/* Avatar / Pet Position */}
-          <div className="absolute -bottom-12 left-8 p-1 bg-white rounded-2xl shadow-xl">
+          <div className="absolute -bottom-10 sm:-bottom-12 left-4 sm:left-8 p-1 bg-white rounded-2xl shadow-xl z-20 scale-90 sm:scale-100 origin-bottom-left">
             {profile?.petId ? (
               <PetAvatar 
                 petId={profile.petId} 
@@ -89,9 +89,9 @@ export default function StudentProfileModal({
 
           {/* League Badge */}
           {league && (
-            <div className="absolute -bottom-6 right-8 bg-white px-4 py-2 rounded-full shadow-lg border border-slate-100 flex items-center gap-2">
-              <span className="text-2xl">{league.emoji}</span>
-              <span className={`font-bold uppercase tracking-wider text-sm ${league.color}`}>
+            <div className="absolute -bottom-5 sm:-bottom-6 right-4 sm:right-8 bg-white px-3 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg border border-slate-100 flex items-center gap-1.5 sm:gap-2 z-20 scale-90 sm:scale-100 origin-bottom-right">
+              <span className="text-xl sm:text-2xl">{league.emoji}</span>
+              <span className={`font-bold uppercase tracking-wider text-xs sm:text-sm ${league.color}`}>
                 {league.name}
               </span>
             </div>
@@ -99,10 +99,10 @@ export default function StudentProfileModal({
         </div>
 
         {/* Content */}
-        <div className="pt-16 pb-8 px-8 space-y-6 overflow-y-auto max-h-[70vh]">
+        <div className="pt-16 sm:pt-16 pb-8 px-5 sm:px-8 space-y-6 overflow-y-auto max-h-[70vh]">
           {/* Name & Title */}
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900">{studentName}</h2>
+          <div className="mt-2 sm:mt-0">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 break-words pr-2">{studentName}</h2>
             {equippedTitleReward && (
               <p className="text-indigo-600 font-semibold mt-1">
                 {equippedTitleReward.emoji} {equippedTitleReward.name}

@@ -978,18 +978,76 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                   return (
                     <Fragment key={assignment.id}>
                       <ListItem
-                        alignItems="flex-start"
-                        sx={{ px: 0.5, py: 1.5 }}
-                        secondaryAction={
-                          isCompleted ? (
-                            <Stack direction="row" spacing={1} alignItems="center">
+                        sx={{ 
+                          px: { xs: 1, sm: 2 }, 
+                          py: 1.5,
+                          display: 'flex',
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          alignItems: { xs: 'stretch', sm: 'center' },
+                          gap: { xs: 2, sm: 0 }
+                        }}
+                      >
+                        {/* Avatar and Text Area */}
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', flex: 1, width: '100%' }}>
+                          <ListItemAvatar sx={{ mt: 0, minWidth: 56 }}>
+                            <Badge
+                              color="secondary"
+                              overlap="circular"
+                              badgeContent={
+                                isCompleted ? <AssignmentIcon sx={{ fontSize: 16 }} /> : null
+                              }
+                            >
+                              <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                {displayTitle.charAt(0)}
+                              </Avatar>
+                            </Badge>
+                          </ListItemAvatar>
+                          <ListItemText
+                            sx={{ m: 0 }}
+                            primary={
+                              <Typography sx={{ fontWeight: 600 }}>
+                                {displayTitle}
+                              </Typography>
+                            }
+                            secondaryTypographyProps={{ component: 'div' }}
+                            secondary={
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap', rowGap: 0.5 }}>
+                                <Typography component="span" variant="body2" color="text.secondary">
+                                  Assigned: {formatDate(assignment.assignedAt)}
+                                </Typography>
+                                {questionInfo && (
+                                  <Typography component="span" variant="body2" color="text.secondary">
+                                    • {questionInfo.total} question{questionInfo.total !== 1 ? 's' : ''}
+                                  </Typography>
+                                )}
+                                {isCompleted && (
+                                  <Typography component="span" variant="body2" sx={{ color: 'text.primary' }}>
+                                    — Completed
+                                  </Typography>
+                                )}
+                              </Stack>
+                            }
+                          />
+                        </Box>
+                        
+                        {/* Action Buttons */}
+                        <Box sx={{ 
+                          width: { xs: '100%', sm: 'auto' }, 
+                          display: 'flex', 
+                          justifyContent: { xs: 'flex-start', sm: 'flex-end' }, 
+                          pl: { xs: 7, sm: 2 },
+                          mt: { xs: -0.5, sm: 0 }
+                        }}>
+                          {isCompleted ? (
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: {xs: 1, sm: 0} }}>
                               {scoreChipLabel && (
-                                <Chip label={scoreChipLabel} size="small" sx={{ fontWeight: 600 }} />
+                                <Chip label={scoreChipLabel} size="small" sx={{ fontWeight: 600, mb: {xs: 1, sm: 0} }} />
                               )}
                               <MuiButton
                                 variant="contained"
                                 startIcon={<VisibilityIcon />}
                                 onClick={() => handleViewResults(assignment)}
+                                sx={{ mb: {xs: 1, sm: 0} }}
                               >
                                 View results
                               </MuiButton>
@@ -1002,47 +1060,8 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                             >
                               Start homework
                             </MuiButton>
-                          )
-                        }
-                      >
-                        <ListItemAvatar>
-                          <Badge
-                            color="secondary"
-                            overlap="circular"
-                            badgeContent={
-                              isCompleted ? <AssignmentIcon sx={{ fontSize: 16 }} /> : null
-                            }
-                          >
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
-                              {displayTitle.charAt(0)}
-                            </Avatar>
-                          </Badge>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography sx={{ fontWeight: 600 }}>
-                              {displayTitle}
-                            </Typography>
-                          }
-                          secondaryTypographyProps={{ component: 'div' }}
-                          secondary={
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap', rowGap: 0.5 }}>
-                              <Typography component="span" variant="body2" color="text.secondary">
-                                Assigned: {formatDate(assignment.assignedAt)}
-                              </Typography>
-                              {questionInfo && (
-                                <Typography component="span" variant="body2" color="text.secondary">
-                                  • {questionInfo.total} question{questionInfo.total !== 1 ? 's' : ''}
-                                </Typography>
-                              )}
-                              {isCompleted && (
-                                <Typography component="span" variant="body2" sx={{ color: 'text.primary' }}>
-                                  — Completed
-                                </Typography>
-                              )}
-                            </Stack>
-                          }
-                        />
+                          )}
+                        </Box>
                       </ListItem>
                       {index < assignments.length - 1 && (
                         <Divider component="li" sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
