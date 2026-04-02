@@ -142,15 +142,40 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
   const petNeeds: PetNeeds = gameProfile ? getPetNeeds(gameProfile) : { poopCount: 0, isHungry: false, isBored: false, isThirsty: false };
   const hasNeeds = gameProfile?.petId ? (petNeeds.poopCount > 0 || petNeeds.isHungry || petNeeds.isBored || petNeeds.isThirsty) : false;
 
+  // Get the single worst pet need message (priority: poop > hunger > thirst > boredom)
+  const getWorstNeedPhrase = (): string | null => {
+    if (petNeeds.poopCount > 0) return "Фу, тут плохо пахнет... 💩";
+    if (petNeeds.isHungry) return "Я голоден! 🍽️";
+    if (petNeeds.isThirsty) return "Я хочу пить! 💧";
+    if (petNeeds.isBored) return "Мне скучно... 😐";
+    return null;
+  };
+
+  // Auto-show the worst need message when needs change
+  useEffect(() => {
+    if (hasNeeds && gameProfile?.petId) {
+      const worstPhrase = getWorstNeedPhrase();
+      if (worstPhrase) {
+        setPetPhrase(worstPhrase);
+      }
+    }
+  }, [petNeeds.poopCount, petNeeds.isHungry, petNeeds.isThirsty, petNeeds.isBored]);
+
   const togglePetPhrase = () => {
     if (petPhrase) {
       setPetPhrase(null);
       return;
     }
-    
-    setPetPhrase("Купи мне что-нибудь! 🥺");
-    triggerPetReaction("🤩");
-    setTimeout(() => setShowShop(true), 1500);
+
+    // If there are needs, show the worst one; otherwise open shop
+    const worstPhrase = getWorstNeedPhrase();
+    if (worstPhrase) {
+      setPetPhrase(worstPhrase);
+    } else {
+      setPetPhrase("Купи мне что-нибудь! 🥺");
+      triggerPetReaction("🤩");
+      setTimeout(() => setShowShop(true), 1500);
+    }
   };
 
   const level = gameProfile ? getLevelForXP(gameProfile.xp) : null;
@@ -1276,13 +1301,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
         <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
           <div className="relative">
             {petReaction && (
-              <div
-                className={`absolute rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md ${
-                  petNeeds.poopCount > 0 && petReaction === "🤢"
-                    ? "-top-10 left-1/2 -translate-x-1/2"
-                    : "-top-9 right-2 animate-bounce"
-                }`}
-              >
+              <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
                 {petReaction}
               </div>
             )}
@@ -1303,8 +1322,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     setActiveCareNeed(null);
                   } else {
                     setActiveCareNeed("poop");
-                    setPetPhrase("Здесь плохо пахнет... Нужно убраться! 🧹");
-                    triggerPetReaction("🤢");
+                    setPetPhrase("Фу, тут плохо пахнет... Нужно убраться! 🧹");
                   }
                 }}
                 className="absolute -bottom-4 -left-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer animate-bounce"
@@ -1321,7 +1339,14 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             {petNeeds.isHungry && (
               <button
                 type="button"
-                onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
+                onClick={() => {
+                  if (activeCareNeed === "hunger") {
+                    setActiveCareNeed(null);
+                  } else {
+                    setActiveCareNeed("hunger");
+                    setPetPhrase("Я голоден! Покорми меня! 🍽️");
+                  }
+                }}
                 className="absolute -top-6 -right-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Покормить!"
               >
@@ -1331,7 +1356,14 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             {petNeeds.isBored && (
               <button
                 type="button"
-                onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
+                onClick={() => {
+                  if (activeCareNeed === "boredom") {
+                    setActiveCareNeed(null);
+                  } else {
+                    setActiveCareNeed("boredom");
+                    setPetPhrase("Мне скучно... Поиграй со мной! 🎮");
+                  }
+                }}
                 className="absolute -top-6 -left-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Поиграть!"
               >
@@ -1341,7 +1373,14 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
             {petNeeds.isThirsty && (
               <button
                 type="button"
-                onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
+                onClick={() => {
+                  if (activeCareNeed === "thirst") {
+                    setActiveCareNeed(null);
+                  } else {
+                    setActiveCareNeed("thirst");
+                    setPetPhrase("Я хочу пить! Дай мне воды! 💧");
+                  }
+                }}
                 className="absolute bottom-4 -right-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
                 title="Попоить!"
               >

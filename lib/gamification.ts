@@ -862,25 +862,24 @@ export function getPetNeeds(profile: GameProfile): PetNeeds {
 
   const now = Date.now();
 
+  // Helper: get elapsed time since a timestamp. If null, treat as "just now" (0 elapsed)
+  // so needs don't appear until the real timer starts from pet adoption.
+  const getElapsed = (isoString: string | null): number => {
+    if (isoString) return now - new Date(isoString).getTime();
+    return 0; // No timestamp = no time elapsed = no need yet
+  };
+
   // Poop: accumulates 1 per 3-day cycle, max 5
-  const lastCleaned = profile.petLastCleaned ? new Date(profile.petLastCleaned).getTime() : 0;
-  const cleanedElapsed = lastCleaned > 0 ? now - lastCleaned : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
-  const poopCount = Math.min(5, Math.floor(cleanedElapsed / PET_CARE_CYCLE_MS));
+  const poopCount = Math.min(5, Math.floor(getElapsed(profile.petLastCleaned) / PET_CARE_CYCLE_MS));
 
   // Hunger: binary, true if > 3 days since last fed
-  const lastFed = profile.petLastFed ? new Date(profile.petLastFed).getTime() : 0;
-  const fedElapsed = lastFed > 0 ? now - lastFed : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
-  const isHungry = fedElapsed >= PET_CARE_CYCLE_MS;
+  const isHungry = getElapsed(profile.petLastFed) >= PET_CARE_CYCLE_MS;
 
   // Boredom: binary, true if > 3 days since last played
-  const lastPlayed = profile.petLastPlayed ? new Date(profile.petLastPlayed).getTime() : 0;
-  const playedElapsed = lastPlayed > 0 ? now - lastPlayed : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
-  const isBored = playedElapsed >= PET_CARE_CYCLE_MS;
+  const isBored = getElapsed(profile.petLastPlayed) >= PET_CARE_CYCLE_MS;
 
   // Thirst: binary, true if > 3 days since last drank
-  const lastDrank = profile.petLastDrank ? new Date(profile.petLastDrank).getTime() : 0;
-  const drankElapsed = lastDrank > 0 ? now - lastDrank : (profile.lastUpdated?.seconds ? now - profile.lastUpdated.seconds * 1000 : PET_CARE_CYCLE_MS);
-  const isThirsty = drankElapsed >= PET_CARE_CYCLE_MS;
+  const isThirsty = getElapsed(profile.petLastDrank) >= PET_CARE_CYCLE_MS;
 
   return { poopCount, isHungry, isBored, isThirsty };
 }

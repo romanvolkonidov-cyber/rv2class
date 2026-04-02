@@ -106,10 +106,10 @@ export default function PetCarePopover({
           needType === "poop" ? "bg-amber-50" : needType === "hunger" ? "bg-orange-50" : needType === "thirst" ? "bg-cyan-50" : "bg-blue-50"
         }`}>
           <span className="text-sm font-bold text-slate-800">
-            {needType === "poop" && `💩 Убрать за питомцем? (${needs.poopCount})`}
-            {needType === "hunger" && "🍽️ Питомец голоден!"}
-            {needType === "thirst" && "💧 Питомец хочет пить!"}
-            {needType === "boredom" && "😐 Питомцу скучно!"}
+            {needType === "poop" && `💩 Фу, тут плохо пахнет! (${needs.poopCount})`}
+            {needType === "hunger" && "🍽️ Я голоден! Покорми меня!"}
+            {needType === "thirst" && "💧 Я хочу пить! Дай воды!"}
+            {needType === "boredom" && "😐 Мне скучно... Поиграй со мной!"}
           </span>
           <button
             onClick={onClose}

@@ -23,13 +23,24 @@ export default function PetSelectionModal({ isOpen, profile, onSelect }: PetSele
     if (!selectedPetId) return;
     setIsSaving(true);
     try {
-      // Set initial poop state by backdating petLastCleaned by 3 days
-      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+      // Initialize ALL care timestamps to NOW so the 3-day countdown
+      // starts fresh from adoption — not from lastUpdated (which resets on deploys)
+      const nowISO = new Date().toISOString();
       await updateGameProfile(profile.studentId, { 
         petId: selectedPetId,
-        petLastCleaned: threeDaysAgo 
+        petLastCleaned: nowISO,
+        petLastFed: nowISO,
+        petLastPlayed: nowISO,
+        petLastDrank: nowISO,
       });
-      onSelect({ ...profile, petId: selectedPetId, petLastCleaned: threeDaysAgo });
+      onSelect({ 
+        ...profile, 
+        petId: selectedPetId, 
+        petLastCleaned: nowISO,
+        petLastFed: nowISO,
+        petLastPlayed: nowISO,
+        petLastDrank: nowISO,
+      });
     } catch (err) {
       console.error("Failed to select pet:", err);
       alert("Something went wrong. Please try again.");
