@@ -847,8 +847,17 @@ export async function saveQuestionProgress(studentId: string, homeworkId: string
 
 // ─── Pet Care (Tamagotchi) ───────────────────────────────────────────
 
-const PET_CARE_CYCLE_DAYS = 3;
+const PET_CARE_CYCLE_DAYS = 4;
 const PET_CARE_CYCLE_MS = PET_CARE_CYCLE_DAYS * 24 * 60 * 60 * 1000;
+
+function getStudentSeed(studentId: string): number {
+  let hash = 0;
+  for (let i = 0; i < studentId.length; i++) {
+    hash = (hash << 5) - hash + studentId.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
 
 export interface PetNeeds {
   poopCount: number; // 0-5
@@ -861,25 +870,40 @@ export function getPetNeeds(profile: GameProfile): PetNeeds {
   if (!profile.petId) return { poopCount: 0, isHungry: false, isBored: false, isThirsty: false };
 
   const now = Date.now();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const cycleMs = 4 * MS_PER_DAY;
+  
+  // Use a deterministic offset per student so their "Day 0" is staggered
+  const studentOffset = (getStudentSeed(profile.studentId) % 4) * MS_PER_DAY;
 
-  // Helper: get elapsed time since a timestamp. If null, treat as "just now" (0 elapsed)
-  // so needs don't appear until the real timer starts from pet adoption.
-  const getElapsed = (isoString: string | null): number => {
-    if (isoString) return now - new Date(isoString).getTime();
-    return 0; // No timestamp = no time elapsed = no need yet
+  /**
+   * Calculates how many times a "scheduled event" has passed since the last action.
+   * phaseDays: 0 for Day 0, 1 for Day 1, etc. in the 4-day cycle.
+   */
+  const getOccurrencesSince = (isoString: string | null, phaseDays: number): number => {
+    if (!isoString) return 0; // No need until the cycle starts after adoption
+    
+    const lastAction = new Date(isoString).getTime();
+    const phaseOffset = phaseDays * MS_PER_DAY;
+    
+    // Total scheduled occurrences since any fixed epoch
+    const occurrencesNow = Math.floor((now + studentOffset - phaseOffset) / cycleMs);
+    const occurrencesThen = Math.floor((lastAction + studentOffset - phaseOffset) / cycleMs);
+    
+    return Math.max(0, occurrencesNow - occurrencesThen);
   };
 
-  // Poop: accumulates 1 per 3-day cycle, max 5
-  const poopCount = Math.min(5, Math.floor(getElapsed(profile.petLastCleaned) / PET_CARE_CYCLE_MS));
+  // 1. Hunger: Day 0 of the cycle
+  const isHungry = getOccurrencesSince(profile.petLastFed, 0) > 0;
 
-  // Hunger: binary, true if > 3 days since last fed
-  const isHungry = getElapsed(profile.petLastFed) >= PET_CARE_CYCLE_MS;
+  // 2. Thirst: Day 1 of the cycle
+  const isThirsty = getOccurrencesSince(profile.petLastDrank, 1) > 0;
 
-  // Boredom: binary, true if > 3 days since last played
-  const isBored = getElapsed(profile.petLastPlayed) >= PET_CARE_CYCLE_MS;
+  // 3. Boredom: Day 2 of the cycle
+  const isBored = getOccurrencesSince(profile.petLastPlayed, 2) > 0;
 
-  // Thirst: binary, true if > 3 days since last drank
-  const isThirsty = getElapsed(profile.petLastDrank) >= PET_CARE_CYCLE_MS;
+  // 4. Poop: Day 3 of the cycle. Stacks once every 4 days, max 5.
+  const poopCount = Math.min(5, getOccurrencesSince(profile.petLastCleaned, 3));
 
   return { poopCount, isHungry, isBored, isThirsty };
 }
