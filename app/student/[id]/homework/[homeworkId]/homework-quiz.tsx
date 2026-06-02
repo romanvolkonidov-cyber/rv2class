@@ -1140,6 +1140,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
               {/* Answer Options */}
               {currentQ.type === 'voiceAnswer' ? (
                 <VoiceAnswerQuestion
+                  key={currentQ.id}
                   questionId={currentQ.id}
                   feedback={voiceFeedback[currentQ.id] ?? null}
                   isSubmitting={!!voiceSubmitting[currentQ.id]}
