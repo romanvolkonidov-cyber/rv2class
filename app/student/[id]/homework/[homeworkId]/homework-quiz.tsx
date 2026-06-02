@@ -1276,8 +1276,8 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                 ) : (
                   <Button
                     onClick={handleSubmit}
-                    disabled={submitting}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none"
+                    disabled={submitting || !isCurrentAnswered}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Submitting...</>
