@@ -1,0 +1,1354 @@
+"use client";
+
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { fetchStudentHomework, fetchStudentHomework as _fsh, fetchQuestionsForHomework, submitHomeworkAnswers, fetchHomeworkReports, fetchAllStudentRatings, uploadVoiceRecording, Question, HomeworkAssignment } from "@/lib/firebase";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Loader2, CheckCircle, ArrowLeft, AlertCircle, Trophy, Volume2, Film, Image as ImageIcon, Clock, Zap, Star, Coins } from "lucide-react";
+import { awardHomeworkXP, calculateXP, getLevelForXP, getLeagueForLevel, getMasterTierInfo, getNextLevel, getThemeVisualConfig, getXPProgress, AwardResult, getGameProfile, saveQuestionProgress } from "@/lib/gamification";
+import { playSound } from "@/lib/audioSystem";
+import confetti from "canvas-confetti";
+import PetAvatar from "@/components/PetAvatar";
+
+interface HomeworkQuizProps {
+  studentId: string;
+  studentName: string;
+  homeworkId: string;
+}
+
+// ─── VoiceAnswerQuestion Component ────────────────────────────────────────
+function VoiceAnswerQuestion({
+  questionId,
+  feedback,
+  isSubmitting,
+  onBlobReady,
+  onSubmit,
+}: {
+  questionId: string;
+  feedback: { transcript: string; feedback: string; audioUrl: string } | null;
+  isSubmitting: boolean;
+  onBlobReady: (blob: Blob) => void;
+  onSubmit: (blob: Blob) => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [localBlob, setLocalBlob] = useState<Blob | null>(null);
+  const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(300); // 5 min
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const resultBlob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' });
+        const url = URL.createObjectURL(resultBlob);
+        setLocalBlob(resultBlob);
+        setLocalUrl(url);
+        onBlobReady(resultBlob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      mr.start();
+      setRecording(true);
+      setSecondsLeft(300);
+      timerRef.current = setInterval(() => {
+        setSecondsLeft(prev => {
+          if (prev <= 1) { stopRecording(); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch {
+      alert('Could not access microphone. Please allow microphone access and try again.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    setRecording(false);
+  };
+
+  const handleReRecord = () => {
+    setLocalBlob(null);
+    setLocalUrl(null);
+    setSecondsLeft(300);
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  // ── Evaluated: show feedback ─────────────────────────────────────────
+  if (feedback) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-green-700 font-semibold">
+          <CheckCircle className="w-5 h-5" /> Answer submitted
+        </div>
+        {(feedback.audioUrl || localUrl) && (
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Your recording</p>
+            <audio controls className="w-full rounded-lg" src={feedback.audioUrl || localUrl!} />
+          </div>
+        )}
+        {feedback.transcript && (
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What you said</p>
+            <p className="text-gray-800 italic">&ldquo;{feedback.transcript}&rdquo;</p>
+          </div>
+        )}
+        <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">AI Feedback</p>
+          <p className="text-gray-800 leading-relaxed whitespace-pre-line">{feedback.feedback}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Evaluating (uploading + Gemini) ──────────────────────────────────
+  if (isSubmitting) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-6">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <p className="text-sm font-medium text-indigo-700">Evaluating your answer…</p>
+        {localUrl && (
+          <div className="w-full">
+            <p className="text-xs text-gray-500 mb-1">Your recording</p>
+            <audio controls className="w-full rounded-lg" src={localUrl} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Recorded, ready to submit ─────────────────────────────────────────
+  if (localUrl && !recording) {
+    return (
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs text-gray-500 mb-1">Listen to your recording</p>
+          <audio controls className="w-full rounded-lg" src={localUrl} />
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={handleReRecord}
+            className="flex-1 py-2 px-4 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            ↺ Re-record
+          </button>
+          <button
+            onClick={() => localBlob && onSubmit(localBlob)}
+            className="flex-1 py-2 px-4 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
+          >
+            ✓ Submit Answer
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 text-center">You can re-record as many times as you like before submitting.</p>
+      </div>
+    );
+  }
+
+  // ── Not yet recorded ─────────────────────────────────────────────────
+  return (
+    <div className="space-y-4">
+      {recording && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-3">
+          <span className="inline-block w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-red-700 font-semibold text-sm">Recording…</span>
+          <span className="ml-auto font-mono text-red-600 font-bold">{formatTime(secondsLeft)}</span>
+        </div>
+      )}
+      <div className="flex justify-center">
+        {recording ? (
+          <button
+            onClick={stopRecording}
+            className="flex flex-col items-center gap-2 w-24 h-24 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-all active:scale-95"
+          >
+            <span className="text-2xl mt-4">⏹</span>
+            <span className="text-xs font-semibold">Stop</span>
+          </button>
+        ) : (
+          <button
+            onClick={startRecording}
+            className="flex flex-col items-center gap-2 w-24 h-24 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transition-all active:scale-95"
+          >
+            <span className="text-3xl mt-3">🎙️</span>
+            <span className="text-xs font-semibold">Record</span>
+          </button>
+        )}
+      </div>
+      <p className="text-center text-xs text-gray-500">Maximum recording time: 5 minutes</p>
+    </div>
+  );
+}
+
+export default function HomeworkQuiz({ studentId, studentName, homeworkId }: HomeworkQuizProps) {
+  const router = useRouter();
+  const [assignment, setAssignment] = useState<HomeworkAssignment | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<{ [questionId: string]: string }>({});
+  const [lockedAnswers, setLockedAnswers] = useState<{ [questionId: string]: boolean }>({});
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [results, setResults] = useState<{ score: number; correctAnswers: number; totalQuestions: number } | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // Gamification state
+  const [startTime] = useState(Date.now());
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [feedbackState, setFeedbackState] = useState<"idle" | "correct" | "wrong">("idle");
+  const [correctCount, setCorrectCount] = useState(0);
+  const [awardResult, setAwardResult] = useState<AwardResult | null>(null);
+  const [showXPAnimation, setShowXPAnimation] = useState(false);
+  const [quizPet, setQuizPet] = useState<{
+    petId: string;
+    accessories: string[];
+    frameId?: string | null;
+    vehicleId?: string | null;
+    backgroundId?: string | null;
+  } | null>(null);
+  const [petReaction, setPetReaction] = useState<string | null>(null);
+  const [petPhrase, setPetPhrase] = useState<string | null>(null);
+  const [leaderboardRows, setLeaderboardRows] = useState<any[]>([]);
+  const [studentGlobalRank, setStudentGlobalRank] = useState<number | null>(null);
+  const [equippedTheme, setEquippedTheme] = useState<string | null>(null);
+
+  // Voice answer state
+  const [voiceBlobs, setVoiceBlobs] = useState<{ [questionId: string]: Blob }>({});
+  const [voiceFeedback, setVoiceFeedback] = useState<{ [questionId: string]: { transcript: string; feedback: string; audioUrl: string } }>({});
+  const [voiceSubmitting, setVoiceSubmitting] = useState<{ [questionId: string]: boolean }>({});
+
+  // Draggable pet state
+  const [petPosition, setPetPosition] = useState<{ x: number; y: number } | null>(null);
+  const petDragRef = useRef<{
+    isDragging: boolean;
+    startX: number;
+    startY: number;
+    startPosX: number;
+    startPosY: number;
+    hasMoved: boolean;
+  }>({ isDragging: false, startX: 0, startY: 0, startPosX: 0, startPosY: 0, hasMoved: false });
+  const petContainerRef = useRef<HTMLDivElement>(null);
+
+  const getPetDefaultPosition = useCallback(() => {
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    return {
+      x: window.innerWidth - 160,
+      y: window.innerHeight - 180,
+    };
+  }, []);
+
+  // Initialize pet position on mount or when quizPet becomes available
+  useEffect(() => {
+    if (quizPet && !petPosition) {
+      setPetPosition(getPetDefaultPosition());
+    }
+  }, [quizPet, petPosition, getPetDefaultPosition]);
+
+  const handlePetPointerDown = useCallback((e: React.PointerEvent) => {
+    const pos = petPosition || getPetDefaultPosition();
+    petDragRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: pos.x,
+      startPosY: pos.y,
+      hasMoved: false,
+    };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }, [petPosition, getPetDefaultPosition]);
+
+  const handlePetPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!petDragRef.current.isDragging) return;
+    const dx = e.clientX - petDragRef.current.startX;
+    const dy = e.clientY - petDragRef.current.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      petDragRef.current.hasMoved = true;
+    }
+    const newX = Math.max(0, Math.min(window.innerWidth - 140, petDragRef.current.startPosX + dx));
+    const newY = Math.max(0, Math.min(window.innerHeight - 160, petDragRef.current.startPosY + dy));
+    setPetPosition({ x: newX, y: newY });
+  }, []);
+
+  const handlePetPointerUp = useCallback((e: React.PointerEvent) => {
+    const wasDragging = petDragRef.current.hasMoved;
+    petDragRef.current.isDragging = false;
+    petDragRef.current.hasMoved = false;
+    if (wasDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, []);
+
+  // Timer
+  useEffect(() => {
+    if (submitted) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, submitted]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const normalizeAnswerText = (value: string | number | null | undefined) =>
+    String(value ?? "")
+      .normalize("NFKC")
+      .replace(/\u00A0/g, " ")
+      .replace(/[’‘`´]/g, "'")
+      .replace(/[“”]/g, "\"")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+  const triggerPetReaction = (emoji: string) => {
+    setPetReaction(emoji);
+    setTimeout(() => setPetReaction(null), 2000);
+  };
+  const petPhrases = [
+    "Great job!",
+    "You can do it!",
+    "Let’s learn!",
+    "Keep going!",
+    "One more step!",
+    "Nice focus!",
+    "You are smart!",
+    "Try your best!",
+    "Awesome work!",
+    "Stay curious!",
+    "You are amazing!",
+    "Let’s win today!",
+    "Small steps, big win!",
+    "You got this!",
+    "High five!",
+    "Ready to learn?",
+    "Brave and bright!",
+    "Super effort!",
+    "Keep shining!",
+    "Let’s go!"
+  ];
+  const togglePetPhrase = () => {
+    if (petPhrase) {
+      setPetPhrase(null);
+      return;
+    }
+    const next = petPhrases[Math.floor(Math.random() * petPhrases.length)];
+    setPetPhrase(next);
+  };
+  const themeVisual = getThemeVisualConfig(equippedTheme);
+  const pageBgClass = equippedTheme === "theme_forest"
+    ? "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100"
+    : equippedTheme === "theme_sunset"
+    ? "bg-gradient-to-br from-orange-50 via-rose-50 to-amber-100"
+    : equippedTheme === "theme_ocean"
+    ? "bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-100"
+    : equippedTheme === "theme_purple"
+    ? "bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100"
+    : equippedTheme === "theme_cyber"
+    ? "bg-gradient-to-br from-fuchsia-50 via-cyan-50 to-indigo-100"
+    : equippedTheme === "theme_gold"
+    ? "bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100"
+    : equippedTheme === "theme_diamond"
+    ? "bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100"
+    : "bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100";
+
+  const formatOrdinal = (rank: number) => {
+    if (rank % 100 >= 11 && rank % 100 <= 13) return `${rank}th`;
+    if (rank % 10 === 1) return `${rank}st`;
+    if (rank % 10 === 2) return `${rank}nd`;
+    if (rank % 10 === 3) return `${rank}rd`;
+    return `${rank}th`;
+  };
+
+  const loadLeaderboardSnapshot = async () => {
+    try {
+      const ratings = await fetchAllStudentRatings();
+      const ranked = ratings.filter((r: any) => r.completedHomeworks > 0);
+      const topRows = ranked.slice(0, 3);
+      const me = ranked.find((r: any) => r.studentId === studentId) || null;
+      const meRank = me?.rank || null;
+      const merged = me && !topRows.some((r: any) => r.studentId === me.studentId)
+        ? [...topRows, me]
+        : topRows;
+      setLeaderboardRows(merged);
+      setStudentGlobalRank(meRank);
+    } catch (error) {
+      console.error("Error loading leaderboard snapshot:", error);
+      setLeaderboardRows([]);
+      setStudentGlobalRank(null);
+    }
+  };
+
+  useEffect(() => {
+    loadHomeworkQuiz();
+  }, [homeworkId, studentId]);
+
+  const loadHomeworkQuiz = async () => {
+    setLoading(true);
+    try {
+      const assignments = await fetchStudentHomework(studentId);
+      const hw = assignments.find(a => a.id === homeworkId);
+
+      if (!hw) {
+        router.replace(`/student/${studentId}/homework`);
+        return;
+      }
+
+      if (hw.status === "completed") {
+        router.replace(`/student/${studentId}/homework`);
+        return;
+      }
+
+      setAssignment(hw);
+
+      let topicIds = hw.topicIds || [];
+      if (topicIds.length === 0 && hw.topicId) {
+        topicIds = [hw.topicId];
+      }
+
+      const questionsData = await fetchQuestionsForHomework(topicIds);
+
+      if (questionsData.length === 0) {
+        alert("No questions found for this homework!");
+        router.back();
+        return;
+      }
+
+      setQuestions(questionsData);
+
+      // Load partial progress
+      try {
+        const profile = await getGameProfile(studentId);
+        setEquippedTheme(profile.equippedTheme || null);
+        if (profile.petId) {
+          setQuizPet({
+            petId: profile.petId,
+            accessories: profile.petAccessories || [],
+            frameId: profile.equippedFrame,
+            vehicleId: profile.equippedVehicle,
+            backgroundId: profile.equippedBackground,
+          });
+        }
+        if (profile.progress && profile.progress[homeworkId]) {
+          const hwProg = profile.progress[homeworkId];
+          const restoredAnswers: Record<string, string> = {};
+          const restoredLocked: Record<string, boolean> = {};
+          let restoredCorrect = 0;
+          
+          Object.entries(hwProg.answers).forEach(([qId, data]) => {
+            restoredAnswers[qId] = data.answer;
+            restoredLocked[qId] = true;
+            if (data.isCorrect) restoredCorrect++;
+          });
+          
+          setAnswers(restoredAnswers);
+          setLockedAnswers(restoredLocked);
+          setCorrectCount(restoredCorrect);
+        }
+      } catch (err) {
+        console.error("Error loading progress:", err);
+      }
+    } catch (error) {
+      console.error("Error loading homework quiz:", error);
+      alert("Failed to load homework. Please try again.");
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkAnswer = useCallback((questionId: string, answer: string): boolean => {
+    const question = questions.find(q => q.id === questionId);
+    if (!question) return false;
+    if (typeof question.correctAnswer === "number" && question.options) {
+      const correctOption = question.options[question.correctAnswer];
+      return normalizeAnswerText(answer) === normalizeAnswerText(correctOption);
+    }
+    return normalizeAnswerText(answer) === normalizeAnswerText(question.correctAnswer);
+  }, [questions]);
+
+  const handleAnswerSelect = (questionId: string, answer: string) => {
+    if (feedbackState !== "idle" || lockedAnswers[questionId]) return; // Don't allow change during feedback or if locked
+
+    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+    setLockedAnswers(prev => ({ ...prev, [questionId]: true }));
+
+    // Instant feedback
+    const isCorrect = checkAnswer(questionId, answer);
+    setFeedbackState(isCorrect ? "correct" : "wrong");
+    
+    if (isCorrect) {
+      setCorrectCount(prev => prev + 1);
+      playSound("success");
+      triggerPetReaction(["👏", "😄", "🎉", "⭐"][Math.floor(Math.random() * 4)]);
+    } else {
+      playSound("error");
+      triggerPetReaction("💪");
+    }
+
+    // Save progress asynchronously
+    saveQuestionProgress(studentId, homeworkId, questionId, answer, isCorrect);
+
+    // Auto advance after delay
+    setTimeout(() => {
+      setFeedbackState("idle");
+      setCurrentQuestionIndex(prev => prev < questions.length - 1 ? prev + 1 : prev); // Safer closure
+    }, 1200);
+  };
+
+  const handleTextAnswer = (questionId: string, answer: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const fireConfetti = (score: number) => {
+    if (score >= 100) {
+      // Epic confetti for perfect score
+      const duration = 3000;
+      const end = Date.now() + duration;
+      const frame = () => {
+        confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#FFD700", "#FFA500", "#FF6347"] });
+        confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#FFD700", "#FFA500", "#FF6347"] });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    } else if (score >= 80) {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ["#4ade80", "#22c55e", "#16a34a"] });
+    }
+  };
+
+  const handleVoiceSubmit = async (questionId: string, blob: Blob) => {
+    setVoiceBlobs(prev => ({ ...prev, [questionId]: blob }));
+    setVoiceSubmitting(prev => ({ ...prev, [questionId]: true }));
+    try {
+      const audioUrl = await uploadVoiceRecording(blob, studentId, homeworkId, questionId);
+
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuffer);
+      let binary = '';
+      uint8.forEach(b => { binary += String.fromCharCode(b); });
+      const audioBase64 = btoa(binary);
+
+      const question = questions.find(q => q.id === questionId);
+      const evalRes = await fetch('/api/evaluate-voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audioBase64,
+          mimeType: blob.type || 'audio/webm',
+          questionText: question?.text || '',
+        }),
+      });
+      const evalData = evalRes.ok ? await evalRes.json() : { transcript: '', feedback: 'Evaluation unavailable.' };
+
+      setVoiceFeedback(prev => ({
+        ...prev,
+        [questionId]: { transcript: evalData.transcript || '', feedback: evalData.feedback || '', audioUrl },
+      }));
+      // Mark answered so final submit can include it
+      setAnswers(prev => ({ ...prev, [questionId]: '[voice-recorded]' }));
+    } catch (e) {
+      console.error('Voice submission error for question', questionId, e);
+      setVoiceFeedback(prev => ({
+        ...prev,
+        [questionId]: { transcript: '', feedback: 'Could not evaluate this recording.', audioUrl: '' },
+      }));
+      setAnswers(prev => ({ ...prev, [questionId]: '[voice-recorded]' }));
+    } finally {
+      setVoiceSubmitting(prev => ({ ...prev, [questionId]: false }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Check for voice questions that haven't been evaluated yet
+    const voiceQuestions = questions.filter(q => q.type === 'voiceAnswer');
+    const unevaluated = voiceQuestions.filter(q => !voiceFeedback[q.id]);
+    if (unevaluated.length > 0) {
+      alert(`Please record and submit ${unevaluated.length} voice question(s) before finishing.`);
+      return;
+    }
+
+    const nonVoiceQuestions = questions.filter(q => q.type !== 'voiceAnswer');
+    const unansweredCount = nonVoiceQuestions.filter(q => !answers[q.id]).length;
+    if (unansweredCount > 0) {
+      const confirm = window.confirm(`You have ${unansweredCount} unanswered question(s). Submit anyway?`);
+      if (!confirm) return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Build final answers array — voice answers already have feedback stored
+      const answerArray = Object.entries(answers).map(([questionId, answer]) => {
+        const vf = voiceFeedback[questionId];
+        if (vf) {
+          return { questionId, answer, audioUrl: vf.audioUrl, aiFeedback: vf.feedback, transcript: vf.transcript };
+        }
+        return { questionId, answer };
+      });
+
+      if (answerArray.length === 0) {
+        alert("Error: No answers to submit. Please answer at least one question.");
+        setSubmitting(false);
+        return;
+      }
+
+      const result = await submitHomeworkAnswers(homeworkId, studentId, answerArray, questions);
+
+      if (result.success) {
+        setResults(result);
+        setSubmitted(true);
+        playSound("complete");
+
+        // Fire confetti
+        setTimeout(() => fireConfetti(result.score), 300);
+
+        // Award XP
+        try {
+          const allAssignments = await fetchStudentHomework(studentId);
+          const allReports = await fetchHomeworkReports(studentId);
+          const totalAssigned = allAssignments.length;
+          const totalCompleted = allReports.length + 1; // +1 for this one
+
+          // Check if early completion (within 24h)
+          let wasEarly = false;
+          if (assignment?.assignedAt) {
+            const assignedTime = assignment.assignedAt.seconds
+              ? assignment.assignedAt.seconds * 1000
+              : new Date(assignment.assignedAt).getTime();
+            wasEarly = Date.now() - assignedTime < 24 * 60 * 60 * 1000;
+          }
+
+          const award = await awardHomeworkXP(
+            studentId,
+            homeworkId,
+            result.correctAnswers,
+            result.totalQuestions,
+            elapsedSeconds,
+            totalAssigned,
+            totalCompleted,
+            wasEarly
+          );
+          setAwardResult(award);
+          setShowXPAnimation(true);
+          await loadLeaderboardSnapshot();
+        } catch (err) {
+          console.error("Error awarding XP:", err);
+        }
+      } else {
+        alert("Failed to submit homework. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting homework:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ─── Loading ────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <main className={`min-h-screen ${pageBgClass} flex items-center justify-center p-4`}>
+        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+      </main>
+    );
+  }
+
+  // ─── Results Screen ─────────────────────────────────────────────────
+  if (submitted && results) {
+    const xp = awardResult?.xpBreakdown;
+    const level = awardResult ? getLevelForXP(awardResult.updatedProfile.xp) : null;
+    const league = level ? getLeagueForLevel(level.level) : null;
+    const progress = awardResult ? getXPProgress(awardResult.updatedProfile.xp) : null;
+    const masterTier = awardResult ? getMasterTierInfo(awardResult.updatedProfile.xp) : null;
+    const streakSummary = awardResult
+      ? awardResult.streakOutcome === "kept"
+        ? "Серия продолжена"
+        : awardResult.streakOutcome === "same_week"
+        ? "Эта неделя уже учтена"
+        : awardResult.streakOutcome === "reset"
+        ? "Серия начата заново"
+        : "Первая неделя серии"
+      : null;
+
+    const voiceFeedbackEntries = Object.entries(voiceFeedback);
+
+    return (
+      <main className={`min-h-screen ${pageBgClass} p-4`}>
+        <div className="max-w-2xl mx-auto mt-8 space-y-6">
+          {/* Voice Answer Feedback Cards */}
+          {voiceFeedbackEntries.length > 0 && (
+            <div className="space-y-4">
+              {voiceFeedbackEntries.map(([questionId, { transcript, feedback, audioUrl }]) => {
+                const question = questions.find(q => q.id === questionId);
+                return (
+                  <Card key={questionId} className="backdrop-blur-sm bg-white/90 shadow-lg border-2 border-indigo-200">
+                    <CardHeader className="pb-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-lg">
+                      <CardTitle className="text-base font-semibold text-indigo-800 flex items-center gap-2">
+                        🎙️ Speaking Answer Feedback
+                      </CardTitle>
+                      {question && <p className="text-sm text-gray-600 mt-1">{question.text}</p>}
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      {audioUrl && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Your Recording</p>
+                          <audio controls className="w-full rounded-lg" src={audioUrl} />
+                        </div>
+                      )}
+                      {transcript && (
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What you said</p>
+                          <p className="text-gray-800 italic">"{transcript}"</p>
+                        </div>
+                      )}
+                      <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                        <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-2">Teacher AI Feedback</p>
+                        <p className="text-gray-800 leading-relaxed whitespace-pre-line">{feedback}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Score Card */}
+          <Card className="backdrop-blur-sm bg-white/90 shadow-xl overflow-hidden">
+            <CardHeader className="text-white text-center pb-8" style={{ backgroundImage: themeVisual.buttonGradient }}>
+              <CheckCircle className="h-16 w-16 mx-auto mb-3" />
+              <CardTitle className="text-3xl font-bold">Homework Complete!</CardTitle>
+              <CardDescription className="text-green-100 text-lg mt-1">
+                Great job, {studentName}! 🎉
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 pb-8">
+              <div className="text-center space-y-6">
+                {/* Score */}
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300">
+                  <Trophy className="h-12 w-12 text-yellow-600 mx-auto mb-3" />
+                  <div className="text-5xl font-bold text-yellow-600 mb-1">{results.score}%</div>
+                  <div className="text-lg text-gray-700">
+                    {results.correctAnswers} out of {results.totalQuestions} correct
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    ⏱️ Completed in {formatTime(elapsedSeconds)}
+                  </div>
+                </div>
+
+                {/* XP Breakdown */}
+                {xp && showXPAnimation && (
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border-2 border-indigo-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <Zap className="h-6 w-6 text-indigo-600" />
+                      <span className="text-xl font-bold text-indigo-700">XP Earned</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      {xp.correctAnswerXP > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">✅ Correct answers ({results.correctAnswers} × 10)</span>
+                          <span className="font-bold text-indigo-600">+{xp.correctAnswerXP} XP</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between px-4">
+                        <span className="text-gray-600">📝 Completion bonus</span>
+                        <span className="font-bold text-indigo-600">+{xp.completionXP} XP</span>
+                      </div>
+                      {xp.perfectBonusXP > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">💯 Perfect score!</span>
+                          <span className="font-bold text-yellow-600">+{xp.perfectBonusXP} XP</span>
+                        </div>
+                      )}
+                      {xp.highScoreBonusXP > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">⭐ High score bonus</span>
+                          <span className="font-bold text-green-600">+{xp.highScoreBonusXP} XP</span>
+                        </div>
+                      )}
+                      {xp.timerBonusXP > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">⚡ Speed bonus</span>
+                          <span className="font-bold text-orange-600">+{xp.timerBonusXP} XP</span>
+                        </div>
+                      )}
+                      <div className="border-t border-indigo-200 pt-2 mt-2 flex justify-between px-4">
+                        <span className="font-bold text-gray-800">Total</span>
+                        <span className="font-bold text-lg text-indigo-700">+{xp.totalXP} XP</span>
+                      </div>
+                      <div className="flex justify-between px-4">
+                        <span className="text-gray-600">🪙 Coins earned</span>
+                        <span className="font-bold text-amber-600">+{xp.coinsEarned} coins</span>
+                      </div>
+                      {awardResult && awardResult.bonusCoinsFromMultipliers > 0 && (
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border-2 border-amber-200 mt-4 animate-in zoom-in duration-500">
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                            <span className="font-black text-amber-800 uppercase tracking-widest text-sm">КОМБО-МНОЖИТЕЛИ</span>
+                          </div>
+                          <div className="flex justify-around items-center mb-3">
+                            {awardResult.streakMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">🔥</span>
+                                <span className="text-[10px] font-bold text-amber-700 uppercase">СЕРИЯ</span>
+                                <span className="text-sm font-black text-amber-600">x{awardResult.streakMultiplier}</span>
+                              </div>
+                            )}
+                            {awardResult.punctualityMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">⚡</span>
+                                <span className="text-[10px] font-bold text-emerald-700 uppercase">СКОРОСТЬ</span>
+                                <span className="text-sm font-black text-emerald-600">x{awardResult.punctualityMultiplier}</span>
+                              </div>
+                            )}
+                            {awardResult.weekendMultiplier > 1 && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">🎈</span>
+                                <span className="text-[10px] font-bold text-rose-700 uppercase">ВЫХОДНОЙ</span>
+                                <span className="text-sm font-black text-rose-600">x{awardResult.weekendMultiplier}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex border-t border-amber-200 pt-2 justify-between items-center px-2">
+                             <span className="text-xs font-bold text-amber-900">ИТОГО БОНУС:</span>
+                             <span className="text-lg font-black text-amber-600 animate-pulse">+{awardResult.bonusCoinsFromMultipliers} монет!</span>
+                          </div>
+                        </div>
+                      )}
+                      {awardResult && awardResult.comebackBonusCoins > 0 && (
+                        <div className="flex justify-between px-4">
+                          <span className="text-gray-600">🎁 Comeback bonus</span>
+                          <span className="font-bold text-emerald-600">+{awardResult.comebackBonusCoins} coins</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {awardResult && (
+                  <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-5 border-2 border-rose-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-gray-800">Недельная серия</div>
+                        <div className="text-xs text-gray-600 mt-1">{streakSummary}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-rose-600">{awardResult.updatedProfile.currentStreak}</div>
+                        <div className="text-[11px] text-gray-600">недель подряд</div>
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-gray-600 mt-2">
+                      Рекорд: {awardResult.updatedProfile.highestStreak} недель
+                      {awardResult.missedWeeks > 0 && ` • Пропущено недель: ${awardResult.missedWeeks}`}
+                    </div>
+                  </div>
+                )}
+
+                {/* Level Progress */}
+                {awardResult && level && progress && (
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border-2 border-emerald-200">
+                    {awardResult.leveledUp && (
+                      <div className="text-center mb-3 text-lg font-bold text-emerald-700 animate-bounce">
+                        🎉 Level Up! You are now {level.emoji} {level.title}!
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">{level.emoji}</div>
+                      <div className="flex-1">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-semibold text-gray-700">Level {level.level}: {level.title}</span>
+                          <span className="text-gray-500">{awardResult.updatedProfile.xp} XP</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-gradient-to-r from-emerald-400 to-teal-500 h-3 rounded-full transition-all duration-1000"
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </div>
+                        {progress.needed > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">{progress.current}/{progress.needed} to next level</div>
+                        )}
+                        {progress.needed === 0 && masterTier?.atMaxLevel && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Master Tier {masterTier.tier}: {masterTier.xpIntoTier}/{masterTier.xpPerTier}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* New Badges */}
+                {awardResult && awardResult.newBadges.length > 0 && (
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-5 border-2 border-amber-300">
+                    <div className="text-lg font-bold text-amber-700 mb-3">🏅 New Badge{awardResult.newBadges.length > 1 ? "s" : ""} Unlocked!</div>
+                    <div className="flex flex-wrap justify-center gap-4">
+                      {awardResult.newBadges.map(badge => (
+                        <div key={badge.id} className="text-center animate-bounce">
+                          <div className="text-4xl mb-1">{badge.emoji}</div>
+                          <div className="text-sm font-bold text-gray-800">{badge.name}</div>
+                          <div className="text-xs text-gray-500">{badge.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {league && (
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200">
+                    <div className="text-sm font-bold text-blue-800">Твоя лига: {league.emoji} {league.name}</div>
+                    {studentGlobalRank && (
+                      <div className="text-xs text-blue-700 mt-1">
+                        Место в общем рейтинге: <span className="font-bold">{formatOrdinal(studentGlobalRank)}</span>
+                      </div>
+                    )}
+                    {leaderboardRows.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        {leaderboardRows.map((row: any) => (
+                          <div
+                            key={row.studentId}
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                              row.studentId === studentId ? "bg-blue-100 border border-blue-300" : "bg-white/80"
+                            }`}
+                          >
+                            <div className="font-semibold text-gray-800">{formatOrdinal(row.rank)} {row.studentName}</div>
+                            <div className="text-gray-600">{Math.round(row.averagePercentage)}%</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Encouragement */}
+                <p className="text-lg text-gray-600">
+                  {results.score === 100 && "🎉 Perfect score! Outstanding work!"}
+                  {results.score >= 80 && results.score < 100 && "⭐ Excellent work! Keep it up!"}
+                  {results.score >= 60 && results.score < 80 && "👍 Good job! Keep practicing!"}
+                  {results.score < 60 && "💪 Keep studying and you'll improve!"}
+                </p>
+
+                <Button
+                  onClick={() => router.push(`/student/${studentId}/homework`)}
+                  className="text-white font-semibold px-8 py-6 text-lg"
+                  style={{ backgroundImage: themeVisual.buttonGradient }}
+                >
+                  <ArrowLeft className="mr-2 h-5 w-5" />
+                  Back to Homework List
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        {quizPet && petPosition && (
+          <div
+            ref={petContainerRef}
+            className="fixed z-40 select-none"
+            style={{
+              left: petPosition.x,
+              top: petPosition.y,
+              touchAction: 'none',
+              cursor: petDragRef.current.isDragging ? 'grabbing' : 'grab',
+              transition: petDragRef.current.isDragging ? 'none' : 'filter 0.2s ease',
+              filter: petDragRef.current.isDragging ? 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' : 'none',
+            }}
+            onPointerDown={handlePetPointerDown}
+            onPointerMove={handlePetPointerMove}
+            onPointerUp={handlePetPointerUp}
+          >
+            <div className="relative">
+              {petReaction && (
+                <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                  {petReaction}
+                </div>
+              )}
+              <PetAvatar
+                petId={quizPet.petId}
+                accessories={quizPet.accessories}
+                frameId={quizPet.frameId}
+                vehicleId={quizPet.vehicleId}
+                backgroundId={quizPet.backgroundId}
+                size="lg"
+                className="scale-110 shadow-xl"
+              />
+            </div>
+          </div>
+        )}
+      </main>
+    );
+  }
+
+  // ─── Quiz View ──────────────────────────────────────────────────────
+  const currentQ = questions[currentQuestionIndex];
+  const currentAnswer = answers[currentQ?.id];
+  const isCurrentAnswered = currentQ
+    ? currentQ.type === 'voiceAnswer'
+      ? !!voiceFeedback[currentQ.id]
+      : !!currentAnswer
+    : false;
+
+  return (
+    <main className={`min-h-screen ${pageBgClass} p-4`}>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6 mt-8">
+          <Button variant="outline" onClick={() => router.push(`/student/${studentId}/homework`)} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Homework List
+          </Button>
+
+          <Card className="backdrop-blur-sm bg-white/90 shadow-xl">
+            <CardHeader className="text-white rounded-t-lg shadow-inner" style={{ backgroundImage: themeVisual.buttonGradient }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="h-8 w-8 drop-shadow-md" />
+                  <div>
+                    <CardTitle className="text-2xl font-bold drop-shadow-md">
+                      {assignment?.topicName || "Homework Quiz"}
+                    </CardTitle>
+                    <CardDescription className="text-white font-medium mt-1 drop-shadow-md">
+                      Answer all questions to complete
+                    </CardDescription>
+                  </div>
+                </div>
+                {/* Timer */}
+                <div className="flex items-center gap-2 bg-black/20 text-white rounded-full px-3 py-1.5 shadow-inner">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-mono font-bold text-sm">{formatTime(elapsedSeconds)}</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4 pb-4">
+              {/* Progress Bar */}
+              <div className="flex items-center justify-between text-sm mb-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <span className="font-semibold text-blue-900">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-green-600 font-semibold">✅ {correctCount}</span>
+                  <span className="text-gray-400">|</span>
+                  <span className="text-gray-600">{Object.keys(answers).length} answered</span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="h-2.5 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                    backgroundImage: themeVisual.buttonGradient
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Current Question */}
+        {currentQ && (
+          <Card className={`backdrop-blur-sm bg-white/80 transition-all duration-300 ${
+            feedbackState === "correct" ? "ring-4 ring-green-400 shadow-green-200 shadow-lg" :
+            feedbackState === "wrong" ? "ring-4 ring-red-400 shadow-red-200 shadow-lg animate-shake" :
+            ""
+          }`}>
+            <CardContent className="pt-6">
+              {/* Homework-level media */}
+              {assignment?.homeworkMediaFiles && assignment.homeworkMediaFiles.length > 0 && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-5 w-5 text-indigo-600" />
+                    <span className="font-semibold text-indigo-900">Homework Materials</span>
+                  </div>
+                  <div className="space-y-3">
+                    {assignment.homeworkMediaFiles.map((file, i) => (
+                      <div key={i}>
+                        {file.type === "image" && <img src={file.url} alt="Reference" className="w-full max-h-96 object-contain rounded-lg border" />}
+                        {file.type === "audio" && <audio controls className="w-full" src={file.url} />}
+                        {file.type === "video" && <video controls className="w-full max-h-64 rounded-lg" src={file.url} />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Question Text */}
+              <div className="mb-4">
+                <div className="flex items-start gap-3">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-white ${
+                    feedbackState === "correct" ? "bg-green-500" : feedbackState === "wrong" ? "bg-red-500" : "bg-purple-500"
+                  } transition-colors duration-300`}>
+                    {feedbackState === "correct" ? "✓" : feedbackState === "wrong" ? "✗" : currentQuestionIndex + 1}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xl font-medium text-gray-900 mb-4">{currentQ.text}</p>
+
+                    {/* Question Media */}
+                    <div className="space-y-3 mb-4">
+                      {currentQ.mediaFiles && currentQ.mediaFiles.length > 0 && currentQ.mediaFiles.map((file, i) => (
+                        <div key={i}>
+                          {file.type === "image" && <img src={file.url} alt="Question" className="w-full max-h-96 object-contain rounded-lg border" />}
+                          {file.type === "audio" && <audio controls className="w-full" src={file.url} />}
+                          {file.type === "video" && <video controls className="w-full max-h-64 rounded-lg" src={file.url} />}
+                        </div>
+                      ))}
+                      {!currentQ.mediaFiles && currentQ.mediaUrl && currentQ.mediaType === "image" && (
+                        <img src={currentQ.mediaUrl} alt="Question" className="w-full max-h-96 object-contain rounded-lg border" />
+                      )}
+                      {!currentQ.mediaFiles && currentQ.mediaUrl && currentQ.mediaType === "audio" && (
+                        <audio controls className="w-full" src={currentQ.mediaUrl} />
+                      )}
+                      {!currentQ.mediaFiles && currentQ.mediaUrl && currentQ.mediaType === "video" && (
+                        <video controls className="w-full max-h-64 rounded-lg" src={currentQ.mediaUrl} />
+                      )}
+                      {currentQ.imageUrl && <img src={currentQ.imageUrl} alt="Question" className="w-full max-h-96 object-contain rounded-lg border" />}
+                      {currentQ.audioUrl && <audio controls className="w-full" src={currentQ.audioUrl} />}
+                      {currentQ.videoUrl && <video controls className="w-full max-h-64 rounded-lg" src={currentQ.videoUrl} />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Answer Options */}
+              {currentQ.type === 'voiceAnswer' ? (
+                <VoiceAnswerQuestion
+                  questionId={currentQ.id}
+                  feedback={voiceFeedback[currentQ.id] ?? null}
+                  isSubmitting={!!voiceSubmitting[currentQ.id]}
+                  onBlobReady={(blob) => {
+                    setVoiceBlobs(prev => ({ ...prev, [currentQ.id]: blob }));
+                  }}
+                  onSubmit={(blob) => handleVoiceSubmit(currentQ.id, blob)}
+                />
+              ) : currentQ.options && currentQ.options.length > 0 ? (
+                <div className="space-y-3">
+                  {currentQ.options.map((option, optionIndex) => {
+                    const isSelected = currentAnswer === option;
+                    const isCorrectOption = (() => {
+                      if (typeof currentQ.correctAnswer === "number") return optionIndex === currentQ.correctAnswer;
+                      return String(currentQ.correctAnswer).trim().toLowerCase() === String(option).trim().toLowerCase();
+                    })();
+
+                    const isLocked = lockedAnswers[currentQ.id];
+                    const showResult = isLocked || feedbackState !== "idle";
+
+                    let optionStyle = "bg-white border-gray-200 hover:border-purple-300";
+                    if (showResult && isSelected && isCorrectOption) {
+                      optionStyle = "bg-green-100 border-green-500 shadow-md";
+                    } else if (showResult && isSelected && !isCorrectOption) {
+                      optionStyle = "bg-red-100 border-red-500 shadow-md";
+                    } else if (showResult && !isSelected && isCorrectOption && (feedbackState === "wrong" || (isLocked && !checkAnswer(currentQ.id, currentAnswer)))) {
+                      optionStyle = "bg-green-50 border-green-400";
+                    } else if (isSelected) {
+                      optionStyle = "bg-purple-50 border-purple-500";
+                    }
+
+                    return (
+                      <label
+                        key={optionIndex}
+                        className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all min-h-[52px] touch-manipulation active:scale-[0.98] select-none ${optionStyle} ${
+                          showResult ? "pointer-events-none" : ""
+                        }`}
+                        onClick={() => {
+                          if (!showResult && !isSelected) {
+                            handleAnswerSelect(currentQ.id, option);
+                          }
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={currentQ.id}
+                          value={option}
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-6 h-6 text-purple-600 touch-manipulation"
+                        />
+                        <span className="text-lg text-gray-800">{option}</span>
+                        {showResult && isSelected && isCorrectOption && (
+                          <span className="ml-auto text-green-600 font-bold text-sm">✓ Correct!</span>
+                        )}
+                        {showResult && isSelected && !isCorrectOption && (
+                          <span className="ml-auto text-red-600 font-bold text-sm">✗ Wrong</span>
+                        )}
+                        {showResult && !isSelected && isCorrectOption && (feedbackState === "wrong" || (isLocked && !checkAnswer(currentQ.id, currentAnswer))) && (
+                          <span className="ml-auto text-green-600 font-bold text-sm">← Correct answer</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <textarea
+                    value={answers[currentQ.id] || ""}
+                    onChange={(e) => handleTextAnswer(currentQ.id, e.target.value)}
+                    disabled={lockedAnswers[currentQ.id] || feedbackState !== "idle"}
+                    placeholder="Type your answer here..."
+                    rows={4}
+                    className={`w-full p-4 text-lg border-2 rounded-lg focus:outline-none resize-none transition-colors ${
+                      lockedAnswers[currentQ.id] 
+                        ? (checkAnswer(currentQ.id, answers[currentQ.id]) ? 'border-green-500 bg-green-50 text-green-900' : 'border-red-500 bg-red-50 text-red-900')
+                        : 'border-gray-200 focus:border-purple-500'
+                    }`}
+                  />
+                  {!lockedAnswers[currentQ.id] && (
+                    <Button 
+                      className="w-full bg-purple-600 hover:bg-purple-700 h-12 text-lg"
+                      onClick={() => handleAnswerSelect(currentQ.id, answers[currentQ.id] || "")}
+                      disabled={!answers[currentQ.id]?.trim() || feedbackState !== "idle"}
+                    >
+                      Check Answer
+                    </Button>
+                  )}
+                  {lockedAnswers[currentQ.id] && !checkAnswer(currentQ.id, answers[currentQ.id]) && currentQ.correctAnswer && (
+                    <div className="p-4 bg-green-100 text-green-800 rounded-lg border border-green-300">
+                      <strong>Correct Answer:</strong> {currentQ.correctAnswer}
+                    </div>
+                  )}
+                  {lockedAnswers[currentQ.id] && checkAnswer(currentQ.id, answers[currentQ.id]) && (
+                    <div className="p-4 bg-green-100 text-green-800 rounded-lg border border-green-300 font-bold flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" /> Correct!
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Navigation */}
+        <div className="mt-8 mb-8">
+          <Card className="backdrop-blur-sm bg-white/90">
+            <CardContent className="pt-6 pb-6">
+              <div className="flex items-center justify-between gap-4">
+                <Button
+                  onClick={handlePrevious}
+                  disabled={currentQuestionIndex === 0}
+                  variant="outline"
+                  className="px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                </Button>
+
+                <div className="text-center text-gray-600">
+                  <div className="font-semibold text-lg">{currentQuestionIndex + 1} / {questions.length}</div>
+                  <div className="text-sm">{isCurrentAnswered ? "✓ Answered" : "Not answered"}</div>
+                </div>
+
+                {currentQuestionIndex < questions.length - 1 ? (
+                  <Button
+                    onClick={handleNext}
+                    disabled={!isCurrentAnswered}
+                    className="text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundImage: themeVisual.buttonGradient }}
+                  >
+                    Next <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-6 py-6 min-h-[48px] touch-manipulation active:scale-95 select-none"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Submitting...</>
+                    ) : (
+                      <><CheckCircle className="mr-2 h-5 w-5" /> Submit ({Object.keys(answers).length}/{questions.length})</>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Shake animation */}
+      <style jsx global>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+      `}</style>
+      {quizPet && petPosition && (
+        <div
+          ref={petContainerRef}
+          className="fixed z-40 select-none"
+          style={{
+            left: petPosition.x,
+            top: petPosition.y,
+            touchAction: 'none',
+            cursor: petDragRef.current.isDragging ? 'grabbing' : 'grab',
+            transition: petDragRef.current.isDragging ? 'none' : 'filter 0.2s ease',
+            filter: petDragRef.current.isDragging ? 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' : 'none',
+          }}
+          onPointerDown={handlePetPointerDown}
+          onPointerMove={handlePetPointerMove}
+          onPointerUp={handlePetPointerUp}
+        >
+          <div className="relative">
+            {petReaction && (
+              <div className="absolute -top-9 right-2 rounded-full bg-white/95 border border-indigo-200 px-2 py-1 text-lg shadow-md animate-bounce">
+                {petReaction}
+              </div>
+            )}
+            {petPhrase && (
+              <div
+                className="absolute -top-14 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 rounded-xl bg-white/95 border border-indigo-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-md whitespace-normal text-center break-words"
+                style={{ maxWidth: "min(16rem, calc(100vw - 1rem))" }}
+              >
+                {petPhrase}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                if (!petDragRef.current.hasMoved) {
+                  togglePetPhrase();
+                }
+              }}
+              className="rounded-2xl"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <PetAvatar
+                petId={quizPet.petId}
+                accessories={quizPet.accessories}
+                frameId={quizPet.frameId}
+                vehicleId={quizPet.vehicleId}
+                backgroundId={quizPet.backgroundId}
+                size="lg"
+                className="scale-110 shadow-xl"
+              />
+            </button>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
