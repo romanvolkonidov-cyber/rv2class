@@ -550,8 +550,12 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
 
       const arrayBuffer = await blob.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
+      // Chunked encoding to avoid call stack overflow on large buffers
       let binary = '';
-      uint8.forEach(b => { binary += String.fromCharCode(b); });
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8.length; i += chunkSize) {
+        binary += String.fromCharCode(...uint8.subarray(i, i + chunkSize));
+      }
       const audioBase64 = btoa(binary);
 
       const question = questions.find(q => q.id === questionId);

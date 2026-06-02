@@ -66,8 +66,8 @@ FEEDBACK: [your feedback]`;
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
-      console.error('Gemini API error:', errText);
-      return NextResponse.json({ error: 'Gemini evaluation failed' }, { status: 502 });
+      console.error('Gemini API error:', geminiRes.status, errText);
+      return NextResponse.json({ error: 'Gemini evaluation failed', detail: errText }, { status: 502 });
     }
 
     const data = await geminiRes.json();
@@ -82,6 +82,6 @@ FEEDBACK: [your feedback]`;
     return NextResponse.json({ transcript, feedback });
   } catch (err) {
     console.error('evaluate-voice error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error', detail: String(err) }, { status: 500 });
   }
 }
