@@ -94,6 +94,7 @@ export interface Student {
   price?: number;
   currency?: string;
   tag?: "red" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink" | "gray";
+  deleted?: boolean;
 }
 
 // Topic interface
@@ -173,10 +174,10 @@ export const fetchStudents = async (): Promise<Student[]> => {
   try {
     await ensureAuth();
     const querySnapshot = await getDocs(collection(db, "students"));
-    const students = querySnapshot.docs.map(doc => ({
+    const students = (querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    })) as Student[];
+    })) as Student[]).filter(s => !s.deleted);
     return students.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   } catch (error) {
     console.error("Error fetching students:", error);
