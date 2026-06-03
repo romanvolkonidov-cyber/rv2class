@@ -165,6 +165,7 @@ export interface Question {
   explanation?: string;
   order?: number;
   createdAt?: string;
+  maxSeconds?: number;
 }
 
 // Fetch all students from Firestore

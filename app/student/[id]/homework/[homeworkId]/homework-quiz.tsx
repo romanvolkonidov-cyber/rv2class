@@ -24,17 +24,19 @@ function VoiceAnswerQuestion({
   isSubmitting,
   onBlobReady,
   onSubmit,
+  maxSeconds = 10,
 }: {
   questionId: string;
   feedback: { transcript: string; feedback: string; audioUrl: string } | null;
   isSubmitting: boolean;
   onBlobReady: (blob: Blob) => void;
   onSubmit: (blob: Blob) => void;
+  maxSeconds?: number;
 }) {
   const [recording, setRecording] = useState(false);
   const [localBlob, setLocalBlob] = useState<Blob | null>(null);
   const [localUrl, setLocalUrl] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(300); // 5 min
+  const [secondsLeft, setSecondsLeft] = useState(maxSeconds);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -58,7 +60,7 @@ function VoiceAnswerQuestion({
 
       mr.start();
       setRecording(true);
-      setSecondsLeft(300);
+      setSecondsLeft(maxSeconds);
       timerRef.current = setInterval(() => {
         setSecondsLeft(prev => {
           if (prev <= 1) { stopRecording(); return 0; }
@@ -81,7 +83,7 @@ function VoiceAnswerQuestion({
   const handleReRecord = () => {
     setLocalBlob(null);
     setLocalUrl(null);
-    setSecondsLeft(300);
+    setSecondsLeft(maxSeconds);
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -185,7 +187,7 @@ function VoiceAnswerQuestion({
           </button>
         )}
       </div>
-      <p className="text-center text-xs text-gray-500">Maximum recording time: 5 minutes</p>
+      <p className="text-center text-xs text-gray-500">Maximum recording time: {formatTime(maxSeconds)}</p>
     </div>
   );
 }
@@ -1144,6 +1146,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                   questionId={currentQ.id}
                   feedback={voiceFeedback[currentQ.id] ?? null}
                   isSubmitting={!!voiceSubmitting[currentQ.id]}
+                  maxSeconds={currentQ.maxSeconds ?? 10}
                   onBlobReady={(blob) => {
                     setVoiceBlobs(prev => ({ ...prev, [currentQ.id]: blob }));
                   }}
