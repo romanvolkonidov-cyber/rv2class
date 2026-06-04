@@ -718,7 +718,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                       <CardTitle className="text-base font-semibold text-indigo-800 flex items-center gap-2">
                         🎙️ Speaking Answer Feedback
                       </CardTitle>
-                      {question && <p className="text-sm text-gray-600 mt-1">{question.text}</p>}
+                      {question && <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{question.text}</p>}
                     </CardHeader>
                     <CardContent className="pt-4 space-y-4">
                       {audioUrl && (
@@ -1111,7 +1111,7 @@ export default function HomeworkQuiz({ studentId, studentName, homeworkId }: Hom
                     {feedbackState === "correct" ? "✓" : feedbackState === "wrong" ? "✗" : currentQuestionIndex + 1}
                   </div>
                   <div className="flex-1">
-                    <p className="text-xl font-medium text-gray-900 mb-4">{currentQ.text}</p>
+                    <p className="text-xl font-medium text-gray-900 mb-4 whitespace-pre-line">{currentQ.text}</p>
 
                     {/* Question Media */}
                     <div className="space-y-3 mb-4">

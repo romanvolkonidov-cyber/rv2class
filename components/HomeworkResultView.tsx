@@ -83,11 +83,11 @@ export default function HomeworkResultView({
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-800 whitespace-pre-line">
                           {question.text}
                         </h3>
                         {question.sentence && (
-                          <p className="text-gray-600 mt-2 italic">
+                          <p className="text-gray-600 mt-2 italic whitespace-pre-line">
                             "{question.sentence}"
                           </p>
                         )}
