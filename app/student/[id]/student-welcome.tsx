@@ -124,7 +124,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
       setPetPhrase(null);
       return;
     }
-    setPetPhrase("Купи мне что-нибудь! 🥺");
+    setPetPhrase("Buy me something! 🥺");
     triggerPetReaction("🤩");
     setTimeout(() => setShowShop(true), 1500);
   };
@@ -309,7 +309,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
         </div>
 
         {gameProfile?.petId && (
-          <div className="fixed right-3 bottom-3 sm:right-6 sm:bottom-6 z-40">
+          <div className="fixed right-10 bottom-4 sm:right-12 sm:bottom-6 z-40">
             <div className="relative">
               {petReaction && (
                 <div
@@ -339,13 +339,13 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                       setActiveCareNeed(null);
                     } else {
                       setActiveCareNeed("poop");
-                      setPetPhrase("Здесь плохо пахнет... Нужно убраться! 🧹");
+                      setPetPhrase("It smells bad here... Time to clean up! 🧹");
                       triggerPetReaction("🤢");
                     }
                   }}
                   className="absolute -bottom-4 -left-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer animate-bounce"
                   style={{ animationDuration: '2s' }}
-                  title="Убрать!"
+                  title="Clean up!"
                 >
                   {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                     <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
@@ -359,7 +359,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "hunger" ? null : "hunger")}
                   className="absolute -top-6 -right-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                  title="Покормить!"
+                  title="Feed me!"
                 >
                   <span className="animate-pulse drop-shadow-lg">🍽️</span>
                 </button>
@@ -369,7 +369,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "boredom" ? null : "boredom")}
                   className="absolute -top-6 -left-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                  title="Поиграть!"
+                  title="Play!"
                 >
                   <span className="animate-pulse drop-shadow-lg">😐</span>
                 </button>
@@ -379,7 +379,7 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                   type="button"
                   onClick={() => setActiveCareNeed(activeCareNeed === "thirst" ? null : "thirst")}
                   className="absolute bottom-4 -right-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                  title="Попоить!"
+                  title="Give a drink!"
                 >
                   <span className="animate-pulse drop-shadow-xl">💧</span>
                 </button>
@@ -388,11 +388,11 @@ export default function StudentWelcome({ student }: { student: StudentData }) {
                 <button 
                   type="button"
                   onClick={() => {
-                    setPetPhrase("Я очень счастлив! 💖");
+                    setPetPhrase("I'm so happy! 💖");
                     triggerPetReaction("🤩");
                   }}
                   className="absolute -top-2 -right-4 z-40 text-4xl animate-pulse cursor-pointer drop-shadow-xl hover:scale-125 transition-transform"
-                  title="Питомец счастлив!"
+                  title="Pet is happy!"
                 >
                   💖
                 </button>
