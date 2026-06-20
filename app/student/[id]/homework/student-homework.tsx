@@ -208,10 +208,10 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
 
   // Get the single worst pet need message (priority: poop > hunger > thirst > boredom)
   const getWorstNeedPhrase = (): string | null => {
-    if (petNeeds.poopCount > 0) return "Фу, тут плохо пахнет... 💩";
-    if (petNeeds.isHungry) return "Я голоден! 🍽️";
-    if (petNeeds.isThirsty) return "Я хочу пить! 💧";
-    if (petNeeds.isBored) return "Мне скучно... 😐";
+    if (petNeeds.poopCount > 0) return "Ew, it smells bad here... 💩";
+    if (petNeeds.isHungry) return "I'm hungry! 🍽️";
+    if (petNeeds.isThirsty) return "I'm thirsty! 💧";
+    if (petNeeds.isBored) return "I'm bored... 😐";
     return null;
   };
 
@@ -236,7 +236,7 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
     if (worstPhrase) {
       setPetPhrase(worstPhrase);
     } else {
-      setPetPhrase("Купи мне что-нибудь! 🥺");
+      setPetPhrase("Buy me something! 🥺");
       triggerPetReaction("🤩");
       setTimeout(() => setShowShop(true), 1500);
     }
@@ -1419,12 +1419,12 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     setActiveCareNeed(null);
                   } else {
                     setActiveCareNeed("poop");
-                    setPetPhrase("Фу, тут плохо пахнет... Нужно убраться! 🧹");
+                    setPetPhrase("Ew, it smells bad here... Time to clean up! 🧹");
                   }
                 }}
                 className="absolute -bottom-4 -left-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer animate-bounce"
                 style={{ animationDuration: '2s' }}
-                title="Убрать!"
+                title="Clean up!"
               >
                 {Array.from({ length: Math.min(petNeeds.poopCount, 5) }).map((_, i) => (
                   <span key={i} className="inline-block drop-shadow-lg relative" style={{ marginLeft: i > 0 ? '-8px' : '0', transform: `rotate(${(i - 2) * 15}deg)` }}>
@@ -1441,11 +1441,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     setActiveCareNeed(null);
                   } else {
                     setActiveCareNeed("hunger");
-                    setPetPhrase("Я голоден! Покорми меня! 🍽️");
+                    setPetPhrase("I'm hungry! Feed me! 🍽️");
                   }
                 }}
                 className="absolute -top-6 -right-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                title="Покормить!"
+                title="Feed me!"
               >
                 <span className="animate-pulse drop-shadow-lg">🍽️</span>
               </button>
@@ -1458,11 +1458,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     setActiveCareNeed(null);
                   } else {
                     setActiveCareNeed("boredom");
-                    setPetPhrase("Мне скучно... Поиграй со мной! 🎮");
+                    setPetPhrase("I'm bored... Play with me! 🎮");
                   }
                 }}
                 className="absolute -top-6 -left-6 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                title="Поиграть!"
+                title="Play!"
               >
                 <span className="animate-pulse drop-shadow-lg">😐</span>
               </button>
@@ -1475,11 +1475,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
                     setActiveCareNeed(null);
                   } else {
                     setActiveCareNeed("thirst");
-                    setPetPhrase("Я хочу пить! Дай мне воды! 💧");
+                    setPetPhrase("I'm thirsty! Give me water! 💧");
                   }
                 }}
                 className="absolute bottom-4 -right-8 z-30 text-3xl hover:scale-125 transition-transform cursor-pointer"
-                title="Попоить!"
+                title="Give a drink!"
               >
                 <span className="animate-pulse drop-shadow-xl">💧</span>
               </button>
@@ -1489,11 +1489,11 @@ export default function StudentHomework({ studentId, studentName }: HomeworkPage
               <button 
                 type="button"
                 onClick={() => {
-                  setPetPhrase("Я очень счастлив! 💖");
+                  setPetPhrase("I'm so happy! 💖");
                   triggerPetReaction("🤩");
                 }}
                 className="absolute -top-2 -right-4 z-40 text-4xl animate-pulse cursor-pointer drop-shadow-xl hover:scale-125 transition-transform"
-                title="Питомец счастлив!"
+                title="Pet is happy!"
               >
                 💖
               </button>

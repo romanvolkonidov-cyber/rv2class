@@ -48,7 +48,7 @@ export default function PetCarePopover({
       onHappyReaction(getHappyEmoji(1));
       onClose();
     } else {
-      setError(result.error || "Ошибка");
+      setError(result.error || "Error");
     }
     setLoading(false);
   };
@@ -63,7 +63,7 @@ export default function PetCarePopover({
       onHappyReaction(getHappyEmoji(result.happiness || 1));
       onClose();
     } else {
-      setError(result.error || "Ошибка");
+      setError(result.error || "Error");
     }
     setLoading(false);
   };
@@ -78,7 +78,7 @@ export default function PetCarePopover({
       onHappyReaction(getHappyEmoji(result.happiness || 1));
       onClose();
     } else {
-      setError(result.error || "Ошибка");
+      setError(result.error || "Error");
     }
     setLoading(false);
   };
@@ -93,7 +93,7 @@ export default function PetCarePopover({
       onHappyReaction(getHappyEmoji(result.happiness || 1));
       onClose();
     } else {
-      setError(result.error || "Ошибка");
+      setError(result.error || "Error");
     }
     setLoading(false);
   };
@@ -106,10 +106,10 @@ export default function PetCarePopover({
           needType === "poop" ? "bg-amber-50" : needType === "hunger" ? "bg-orange-50" : needType === "thirst" ? "bg-cyan-50" : "bg-blue-50"
         }`}>
           <span className="text-sm font-bold text-slate-800">
-            {needType === "poop" && `💩 Фу, тут плохо пахнет! (${needs.poopCount})`}
-            {needType === "hunger" && "🍽️ Я голоден! Покорми меня!"}
-            {needType === "thirst" && "💧 Я хочу пить! Дай воды!"}
-            {needType === "boredom" && "😐 Мне скучно... Поиграй со мной!"}
+            {needType === "poop" && `💩 Ew, it smells bad here! (${needs.poopCount})`}
+            {needType === "hunger" && "🍽️ I'm hungry! Feed me!"}
+            {needType === "thirst" && "💧 I'm thirsty! Give me a drink!"}
+            {needType === "boredom" && "😐 I'm bored... Play with me!"}
           </span>
           <button
             onClick={onClose}
@@ -135,7 +135,7 @@ export default function PetCarePopover({
             >
               <span className="flex items-center gap-2">
                 <span className="text-xl">🧹</span>
-                <span className="text-sm font-semibold text-slate-800">Убрать</span>
+                <span className="text-sm font-semibold text-slate-800">Clean up</span>
               </span>
               <span className="flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 rounded-full px-2 py-1">
                 <Coins className="h-3 w-3" /> 2
@@ -145,7 +145,7 @@ export default function PetCarePopover({
 
           {needType === "hunger" && (
             <div className="space-y-1.5">
-              <p className="text-xs text-slate-500 font-medium px-1">Выбери еду:</p>
+              <p className="text-xs text-slate-500 font-medium px-1">Choose food:</p>
               {PET_FOODS.map(food => (
                 <button
                   key={food.id}
@@ -167,7 +167,7 @@ export default function PetCarePopover({
 
           {needType === "thirst" && (
             <div className="space-y-1.5">
-              <p className="text-xs text-slate-500 font-medium px-1">Дай попить:</p>
+              <p className="text-xs text-slate-500 font-medium px-1">Choose a drink:</p>
               {PET_DRINKS.map(drink => (
                 <button
                   key={drink.id}
@@ -189,7 +189,7 @@ export default function PetCarePopover({
 
           {needType === "boredom" && (
             <div className="space-y-1.5">
-              <p className="text-xs text-slate-500 font-medium px-1">Выбери игрушку:</p>
+              <p className="text-xs text-slate-500 font-medium px-1">Choose a toy:</p>
               {PET_TOYS.map(toy => (
                 <button
                   key={toy.id}
@@ -212,7 +212,7 @@ export default function PetCarePopover({
           {/* Coin balance footer */}
           <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 pt-1 border-t border-slate-100">
             <Coins className="h-3 w-3" />
-            <span>У тебя: <span className="font-bold text-slate-600">{profile.shopCoins}</span> монет</span>
+            <span>You have: <span className="font-bold text-slate-600">{profile.shopCoins}</span> coins</span>
           </div>
         </div>
       </div>
